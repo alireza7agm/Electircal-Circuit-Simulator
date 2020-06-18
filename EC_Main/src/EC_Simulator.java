@@ -7,6 +7,7 @@
 
 public class EC_Simulator {
 
+
     public static class Element{
 
         private double voltage;
@@ -14,14 +15,12 @@ public class EC_Simulator {
         /////////////////other variables
 
         //constructor :
-
         public Element(double voltage, double current) {
             this.voltage = voltage;
             this.current = current;
         }
 
         //getters and setters :
-
         public double getVoltage() {
             return voltage;
         }
@@ -39,9 +38,46 @@ public class EC_Simulator {
         }
     }
 
+
     public class Resistor extends Element{
 
         public Resistor(double voltage, double current) {
+            super(voltage, current);
+        }
+
+    }
+
+
+    public class Capacitor extends Element{
+
+        public Capacitor(double voltage, double current) {
+            super(voltage, current);
+        }
+
+    }
+
+
+    public class Inductor extends Element{
+
+        public Inductor(double voltage, double current) {
+            super(voltage, current);
+        }
+
+    }
+
+
+    public class VoltageSource extends Element{
+
+        public VoltageSource(double voltage, double current) {
+            super(voltage, current);
+        }
+
+    }
+
+
+    public class CurrentSource extends Element{
+
+        public CurrentSource(double voltage, double current) {
             super(voltage, current);
         }
 
