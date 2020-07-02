@@ -1,4 +1,4 @@
-
+        //hi
 
 
 /////// alireza && amir presents:)))))))))))))
@@ -19,6 +19,7 @@ public class EC_Simulator {
             this.voltage = voltage;
             this.current = current;
         }
+
 
         //getters and setters :
         public double getVoltage() {
