@@ -11,9 +11,10 @@ import java.util.ArrayList;
 import java.util.Scanner;
 
 public class EC_Simulator {
+//////////////////////////////
+    public static class Node{
 
-    public static class SuperNode{
-
+        double voltage = 0;
         double voltage_1 = 0;
         double voltage_2 = 0;
         double next_voltage_1 = 0;
@@ -25,14 +26,14 @@ public class EC_Simulator {
         ArrayList <String> connected_nodes_list;
 
 
-        SuperNode(String name){
+        Node(String name){
             this.connected_nodes_list = new ArrayList<String>();
             this.name = name;
             this.union = name;
 
         }
 
-        /*SuperNode (double voltage_1, double voltage_2,
+        /*Node (double voltage_1, double voltage_2,
                    double next_voltage_1, double next_voltage_2,
                    double current, double previous_current, String name){
 
@@ -53,20 +54,71 @@ public class EC_Simulator {
 
     }
 
+
+    public static class SuperNode
+    {
+        ArrayList<Node> nodes;
+        ArrayList<Element> voltage_sources;
+        double base_voltage;
+        String name;
+        double current = 0;
+        double previous_current = 0;
+
+        SuperNode(Node base_node)
+        {
+          nodes = new ArrayList<Node>();
+          voltage_sources = new ArrayList<Element>();
+          base_voltage = base_node.voltage;
+          
+        }
+
+
+///chekcs the first and the last node of the supernode to see which one is connected to the element
+//for added protection, checks all nodes next 
+        double ReturnVoltage(String node_name)
+        {
+          if (this.nodes.get(0).name.matches(node_name))
+          {
+            return this.nodes.get(0).voltage;
+          }
+          else if (this.nodes.get(this.nodes.size()-1).name.matches(node_name))
+          {
+            return this.nodes.get(this.nodes.size()-1).voltage;
+          }
+
+          else
+          {
+            for (node n : nodes)
+            {
+              if (n.name.matches(node_name))
+              {
+                return n.voltage;
+              }
+            }
+          }
+
+          return 0;
+          
+        }
+    }
+
+
     public static class Element{
         double voltage;
         double previous_current;
         double current;
         double value;
+        String in_node_name;
+        String out_node_name;
         SuperNode in;
         SuperNode out;
         String type;
         /////////////////other variables
 
         //constructor :
-        public Element(SuperNode in, SuperNode out, double value, String type) {
-            this.in = in;
-            this.out = out;
+        public Element(String in_node_name, String out_node_name, double value, String type) {
+            this.in_node_name = in_node_name;
+            this.out_node_name = out_node_name;
             this.voltage = 0;
             this.previous_current = 0;
             this.current = 0;
@@ -77,6 +129,7 @@ public class EC_Simulator {
 
         //getters and setters :
         public double getVoltage() {
+            this.voltage = this.value;
             return voltage;
         }
 
@@ -96,14 +149,13 @@ public class EC_Simulator {
 
     public static class Resistor extends Element{
 
-        public Resistor(SuperNode in, SuperNode out, double value, String type) {
+        public Resistor(Node in, Node out, double value, String type) {
             super(in, out, value, type);
         }
 
         void update_resistor(double dv)
         {
-            this.previous_current = (in.voltage_2 - out.voltage_1)/this.value;
-            this.current = (in.voltage_2+dv - out.voltage_1)/this.value;
+            this.current = (in.ReturnVoltage(in_node_name) - out.ReturnVoltage(out_node_name)/this.value;
         }
 
     }
@@ -111,15 +163,15 @@ public class EC_Simulator {
 
     public static class Capacitor extends Element{
 
-        public Capacitor(SuperNode in, SuperNode out, double value, String type) {
+        public Capacitor(Node in, Node out, double value, String type) {
             super(in, out, value, type);
 
         }
 
         void update_capacitor(double dv, double dt)
         {
-            this.previous_current = this.value*((in.next_voltage_2 - out.next_voltage_1)-(in.voltage_2 - out.voltage_1))/dt ;
-            this.current = this.value*((in.next_voltage_2+dv - out.next_voltage_1)-(in.voltage_2 - out.voltage_1))/dt;
+            this.current = this.value*((in.ReturnVoltage(in_node_name) - out.ReturnVoltage(out_node_name))
+            -(in.voltage_2 - out.voltage_1))/dt;
         }
 
     }
@@ -129,7 +181,7 @@ public class EC_Simulator {
 
 
         double initial_current;
-        public Inductor(SuperNode in, SuperNode out, double value, double initial_current, String type) {
+        public Inductor(Node in, Node out, double value, double initial_current, String type) {
             super(in, out, value, type);
             this.initial_current = initial_current;
             this.current += initial_current;
@@ -147,7 +199,7 @@ public class EC_Simulator {
 
     public static class VoltageSource extends Element{
 
-        public VoltageSource(SuperNode in, SuperNode out, double value, String type) {
+        public VoltageSource(Node in, Node out, double value, String type) {
             super(in, out, value, type);
         }
 
@@ -156,7 +208,7 @@ public class EC_Simulator {
 
     public static class CurrentSource extends Element{
 
-        public CurrentSource(SuperNode in, SuperNode out, double value, String type) {
+        public CurrentSource(Node in, Node out, double value, String type) {
             super(in, out, value, type);
         }
 
@@ -164,7 +216,7 @@ public class EC_Simulator {
 
     public static class Circuit{
 
-        ArrayList <SuperNode> super_nodes = new ArrayList<SuperNode>();
+        ArrayList <Node> nodes = new ArrayList<Node>();
         ArrayList <Element> elements = new ArrayList<Element>();
         ArrayList <ArrayList<String>> super_node_lists = new ArrayList<ArrayList<String>>();
 
@@ -183,65 +235,14 @@ public class EC_Simulator {
         public void Init_Circuit()
         {
 
-            for (Element e : this.elements)
-            {
-              /*
-              ArrayList<String> current_super_node = new ArrayList<String>();
-              current_super_node.add(e.in.name);
-              */
-                if (e.type.matches("V"))
-                {
-                    e.in.union = e.out.name;
-                    for (SuperNode n : this.super_nodes)
-                    {
-                        for (String node_name : e.in.connected_nodes_list)
-                        {
-                            if (n.name.matches(node_name))
-                            {
-                                n.connected_nodes_list.add(e.out.name);
-                                e.out.connected_nodes_list.add(n.name);
-                            }
-                        }
-
-                        for (String node_name : e.out.connected_nodes_list)
-                        {
-                            if (n.name.matches(node_name))
-                            {
-                                for (String connected_node_name : e.out.connected_nodes_list)
-                                {
-                                    if (!n.connected_nodes_list.contains(connected_node_name))
-                                    {
-
-                                    }
-                                }
-
-                            }
-                        }
-
-
-                    }
-                    e.in.connected_nodes_list.add(e.out.name);
-                /*
-                if (e.in.union.matches(e.in.name))
-                {
-                  current_super_node.add(e.out.name);
-                }
-                */
-
-
-                }
-              /*
-              this.super_node_lists.add(current_super_node);
-              */
-            }
-            return;
+            
         }
 
         public void Add_Node(String name)
         {
             ////////////change of arguments
             boolean alreadyCreatedNode = false;
-            for (SuperNode sn : this.super_nodes){
+            for (Node sn : this.nodes){
                 if (sn.name.equals(name))
                 {
                     alreadyCreatedNode = true;
@@ -251,13 +252,13 @@ public class EC_Simulator {
 
             if (!alreadyCreatedNode)
             {
-                SuperNode n = new SuperNode(name);
-                super_nodes.add(n);
+                Node n = new Node(name);
+                nodes.add(n);
             }
             return;
         }
 
-        public void Add_Element(SuperNode in, SuperNode out, double value, double initialCondition, String type)
+        public void Add_Element(Node in, Node out, double value, double initialCondition, String type)
         {
             switch (type){
                 case "R":
@@ -285,7 +286,7 @@ public class EC_Simulator {
         }
 
         /*
-        public void Add_Element(Element e, SuperNode in, SuperNode out, double value, String type)
+        public void Add_Element(Element e, Node in, Node out, double value, String type)
         {
             e = new Element(in, out, value, type);
             elements.add(e);
@@ -295,7 +296,7 @@ public class EC_Simulator {
         double Calculate_Sum_of_Squares()
         {
             double sum_of_squares = 0;
-            for (SuperNode n : this.super_nodes)
+            for (Node n : this.nodes)
             {
                 sum_of_squares += n.previous_current * n.previous_current;
             }
@@ -304,7 +305,7 @@ public class EC_Simulator {
 
         void Update_Nodes()
         {
-            for (SuperNode n : this.super_nodes)
+            for (Node n : this.nodes)
             {
                 if (n.name.matches("gnd") && !n.union.matches(n.name))
                 {
@@ -387,9 +388,9 @@ public class EC_Simulator {
 
                 if (!lines.get(cnt).substring(0, 5).equals(".tran")) {
 
-                    SuperNode in = new SuperNode(info[1]);
+                    Node in = new Node(info[1]);
                     eC.Add_Node(info[1]);
-                    SuperNode out = new SuperNode(info[2]);
+                    Node out = new Node(info[2]);
                     eC.Add_Node(info[2]);
 
                     //error invalid value
