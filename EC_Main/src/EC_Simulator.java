@@ -16,8 +16,6 @@ public class EC_Simulator {
 
         double previous voltage = 0;
         double voltage = 0;
-        double current = 0;
-        double previous_current = 0;
         String name;
         String union;
         ArrayList <String> connected_nodes_list;
@@ -43,11 +41,6 @@ public class EC_Simulator {
             this.name = name;
 
         }*/
-        public void ModifyVoltage(double dv)
-        {
-            voltage_1 += dv;
-            voltage_2 += dv;
-        }
 
     }
 
@@ -70,31 +63,10 @@ public class EC_Simulator {
         }
 
 
-///chekcs the first and the last node of the supernode to see which one is connected to the element
-//for added protection, checks all nodes next 
+//checks all nodes to find the node we're looking for 
 ///if previous voltage == true, returns previous voltage, else returns current voltage
         double ReturnVoltage(String node_name, boolean previous_voltage)
         {
-          if (this.nodes.get(0).name.matches(node_name))
-          {
-            if (previous_voltage)
-            {
-              return this.nodes.get(0).previous_voltage;
-            }
-            return this.nodes.get(0).voltage;
-            
-          }
-          else if (this.nodes.get(this.nodes.size()-1).name.matches(node_name))
-          {
-            if (previous_voltage)
-            {
-              return this.nodes.get(this.nodes.size()-1).previous_voltage;  
-            }
-            return this.nodes.get(this.nodes.size()-1).voltage;
-          }
-
-          else
-          {
             for (node n : nodes)
             {
               if (n.name.matches(node_name))
@@ -106,8 +78,6 @@ public class EC_Simulator {
                 return n.voltage;
               }
             }
-          }
-
           return 0;
           
         }
@@ -136,25 +106,6 @@ public class EC_Simulator {
             this.value = value;
             this.type = type;
         }
-
-
-        //getters and setters :
-        public double getVoltage() {
-            this.voltage = this.value;
-            return voltage;
-        }
-
-        public void setVoltage(double voltage) {
-            this.voltage = voltage;
-        }
-
-        public double getCurrent() {
-            return current;
-        }
-
-        public void setCurrent(double current) {
-            this.current = current;
-        }
     }
 
 
@@ -164,9 +115,14 @@ public class EC_Simulator {
             super(in, out, value, type);
         }
 
-        void update_resistor(double dv)
+        void update()
         {
-            this.current = (in.ReturnVoltage(in_node_name,false) - out.ReturnVoltage(out_node_name,false)/this.value;
+          this.current = (in.ReturnVoltage(in_node_name,false) - out.ReturnVoltage(out_node_name,false)/this.value;
+        }
+
+        double return_current()
+        {
+          return this.current = (in.ReturnVoltage(in_node_name,false) - out.ReturnVoltage(out_node_name,false)/this.value;
         }
 
     }
@@ -179,10 +135,16 @@ public class EC_Simulator {
 
         }
 
-        void update_capacitor(double dv, double dt)
+        void update()
         {
-            this.current = this.value*((in.ReturnVoltage(in_node_name,false) - out.ReturnVoltage(out_node_name,false))
-            -(in.ReturnVoltage(in_node_name,true) - out.ReturnVoltage(out_node_name, true)))/dt;
+          this.current = this.value*((in.ReturnVoltage(in_node_name,false) - out.ReturnVoltage(out_node_name,false))
+            -(in.ReturnVoltage(in_node_name,true) - out.ReturnVoltage(out_node_name, true)))/Circuit.dt;
+        }
+
+        double return_current() 
+        {
+          return this.value*((in.ReturnVoltage(in_node_name,false) - out.ReturnVoltage(out_node_name,false))
+            -(in.ReturnVoltage(in_node_name,true) - out.ReturnVoltage(out_node_name, true)))/Circuit.dt;
         }
 
     }
@@ -195,14 +157,20 @@ public class EC_Simulator {
         public Inductor(String in, String out, double value, double initial_current, String type) {
             super(in, out, value, type);
             this.initial_current = initial_current;
-            this.current += initial_current;
-            this.previous_current += initial_current;
+            this.current = initial_current;
         }
 
-        void update_inductor(double dv, double dt)
+        void update()
         {
-            this.current += (in.ReturnVoltage(in_node_name) - out.ReturnVoltage(out_node_name))*dt/this.value;
+          this.current += (in.ReturnVoltage(in_node_name) - out.ReturnVoltage(out_node_name))*Circuit.dt/this.value;
         }
+
+        double 
+        {
+          return (this.current + (in.ReturnVoltage(in_node_name) - out.ReturnVoltage(out_node_name))*Circuit.dt/this.value );
+        }
+
+
 
     }
 
@@ -213,9 +181,9 @@ public class EC_Simulator {
             super(in, out, value, type);
         }
 ///////////returns voltage at time t
-        update_voltage_source()
+        update()
         {
-          return value;
+          this.voltage = voltage;;
         }
 
     }
@@ -228,9 +196,14 @@ public class EC_Simulator {
             this.current = value;
         }
 
-        update_current_source()
+        update()
         {
-          return value;
+          this.current = current;
+        }
+        
+        double return_current()
+        {
+          return this.current;
         }
 
     }
@@ -244,7 +217,7 @@ public class EC_Simulator {
 
         double static time;
         double dv;
-        double dt;
+        double static dt;
         double di;
         double sumOfSquares = 0;
 
@@ -332,47 +305,74 @@ public class EC_Simulator {
 
         void Update_Nodes()
         {
+          //current_1 is the current of the supernode without dv voltage increase
+          //after finding the current of the supernodes, if current 1 is less than current 2
+          //increase voltage by dv (after checking stuff)
+            int current_1 = 0;
+            int current_2 = 0;
             for (SuperNode sn : this.super_nodes)
             {
+              //ground voltage is constant
                 if (sn.name.matches("gnd"))
                 {
                     continue;
                 }
-                sn.current = 0;
-                for (Element e : this.elements)
+                current_1 = 0;
+                current_2 = 0;
+                ArrayList<String> element_names = new ArrayList<String>();
+                for (node n : sn.nodes)
                 {
+                  for (Element e: this.elements)
+                  {
+                    // if element is a voltage source
                     if (e.type.matches('V'))
                     {
                       continue;
                     }
-
-                    if (e.in.name.matches(sn.name))
+                    
+                    if (e.in.matches(n.name))
                     {
-                        n.current -= e.current;
-                        n.previous_current -= e.previous_current;
+                      //save the names of the elements connected to the supernode we're updating. 
+                      //the connected elements will be updated after supernode is updated
+                      element_names.add(n.name);
+                      current_1 -= e.return_current();
+                      sn.ModifyVoltage(dv);
+                      current_1 -= e.return_current();
+                      //undo voltage changes
+                      sn.ModifyVoltage(dv*-1);
+                    } 
+
+                    if (e.out.matches(n.name))
+                    { 
+                      element_names.add(n.name);
+                      current_1 += e.return_current();
+                      sn.ModifyVoltage(dv);
+                      current_1 += e.return_current();
+                      //undo voltage changes
+                      sn.ModifyVoltage(dv*-1);
                     }
-                    else if (e.out.name.matches(n.name)){
-                        n.current += e.current;
-                        n.previous_current += e.previous_current;
-                    }
+
+                  }
                 }
 
+                sn.current = current_1
                 double sum_of_squares_1 = Calculate_Sum_of_Squares();
 
+                //if error is small, don't do anything. error is checked here and not in the beginning because we want to find supernodes currents. this is important especially in the beginning of analysis
                 if (sum_of_squares_1 < 0.1)
                 {
                     continue;
                 }
-                double previous_current_of_node = n.previous_current;
-                n.previous_current = n.current;
+                
+                sn.current = current_2;
                 double sum_of_squares_2 = Calculate_Sum_of_Squares();
-                n.previous_current = previous_current_of_node;
+          
                 if (sum_of_squares_1 > sum_of_squares_2)
                 {
-                    n.ModifyVoltage(dv*sum_of_squares_1);
+                    sn.ModifyVoltage(dv*sum_of_squares_1);
                 }
 
-                else if (sum_of_squares_2 < sum_of_squares_1)
+                else if (sum_of_squares_1 < sum_of_squares_2)
                 {
                     if (sum_of_squares_2 < 0.1)
                     {
@@ -381,23 +381,23 @@ public class EC_Simulator {
 
                     else
                     {
-                        n.ModifyVoltage(-1*dv*sum_of_squares_2);
+                        sn.ModifyVoltage(-1*dv*sum_of_squares_2);
                     }
 
                 }
 
+                //update the elements using the updated Voltages 
+                for (element e: this.elements)
+                {
+                  if (element_names.contains(e.name))
+                  {
+                    e.update_element();
+                  }
+                }
             }
 
         }
-
-
-
-
-
     }
-
-
-
 
     public static void main(String[] args){
 
