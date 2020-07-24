@@ -66,21 +66,26 @@ public class EC_Simulator {
 
 //checks all nodes to find the node we're looking for 
 ///if previous voltage == true, returns previous voltage, else returns current voltage
-        double ReturnVoltage(String node_name, boolean previous_voltage)
+        double ReturnVoltage(int node_address, boolean previous_voltage)
         {
-            for (node n : nodes)
+          if(previous_voltage)
+          {
+            return this.nodes.get(node_address).previous_voltage;
+          }
+          return this.nodes.get(node_address).voltage;
+          
+        }
+
+        int IsNodeHere(String node_name)
+        {
+            for (int i =0; i<this.nodes.size(); i++)
             {
               if (n.name.matches(node_name))
               {
-                if(previous_voltage)
-                {
-                  return n.previous_voltage
-                }
-                return n.voltage;
+                return i;
               }
             }
-          return 0;
-          
+            return -1;
         }
 
         void ModifyVoltage(double dv)
@@ -168,8 +173,11 @@ public class EC_Simulator {
         double value;
         String in_node_name;
         String out_node_name;
-        SuperNode in;
-        SuperNode out;
+        int super_node_1; 
+        int super_node_2;
+        int node_1;
+        int node_2;
+        //in and out supernodes address in the supernodes list of the circuit
         String type;
         /////////////////other variables
 
@@ -192,14 +200,14 @@ public class EC_Simulator {
             super(in, out, value, type);
         }
 
-        void update()
+        void update(SuperNode in, SuperNode out)
         {
-          this.current = (in.ReturnVoltage(in_node_name,false) - out.ReturnVoltage(out_node_name,false)/this.value;
+          this.current = (in.ReturnVoltage(node_1, false) - out.ReturnVoltage(node_2, false)/this.value;
         }
 
-        double return_current()
+        double return_current(SuperNode in, SuperNode out)
         {
-          return this.current = (in.ReturnVoltage(in_node_name,false) - out.ReturnVoltage(out_node_name,false)/this.value;
+          return this.current = (in.ReturnVoltage(node_1, false) - out.ReturnVoltage(node_2, false))/this.value;
         }
 
     }
@@ -212,16 +220,16 @@ public class EC_Simulator {
 
         }
 
-        void update()
+        void update(SuperNode in, SuperNode out)
         {
-          this.current = this.value*((in.ReturnVoltage(in_node_name,false) - out.ReturnVoltage(out_node_name,false))
-            -(in.ReturnVoltage(in_node_name,true) - out.ReturnVoltage(out_node_name, true)))/Circuit.dt;
+          this.current = this.value*((in.ReturnVoltage(in_node_1, false) - out.ReturnVoltage(node_2, false))
+            -(in.ReturnVoltage(node_1, true) - out.ReturnVoltage(node_2, true)))/Circuit.dt;
         }
 
-        double return_current() 
+        double return_current(SuperNode in, SuperNode out) 
         {
-          return this.value*((in.ReturnVoltage(in_node_name,false) - out.ReturnVoltage(out_node_name,false))
-            -(in.ReturnVoltage(in_node_name,true) - out.ReturnVoltage(out_node_name, true)))/Circuit.dt;
+          return this.value*((in.ReturnVoltage(in_node_1, false) - out.ReturnVoltage(node_2, false))
+            -(in.ReturnVoltage(node_1, true) - out.ReturnVoltage(node_2, true)))/Circuit.dt;
         }
 
     }
@@ -237,14 +245,14 @@ public class EC_Simulator {
             this.current = initial_current;
         }
 
-        void update()
+        void update(SuperNode in, SuperNode out)
         {
-          this.current += (in.ReturnVoltage(in_node_name) - out.ReturnVoltage(out_node_name))*Circuit.dt/this.value;
+          this.current += (in.ReturnVoltage(node_1, false) - out.ReturnVoltage(node_2, false))*Circuit.dt/this.value;
         }
 
-        double return_current()
+        double return_current(SuperNode in, SuperNode out)
         {
-          return (this.current + (in.ReturnVoltage(in_node_name) - out.ReturnVoltage(out_node_name))*Circuit.dt/this.value );
+          return (this.current + (in.ReturnVoltage(node_1, false) - out.ReturnVoltage(node_2, false))*Circuit.dt/this.value);
         }
 
 
@@ -254,45 +262,93 @@ public class EC_Simulator {
 
     public static class VoltageSource extends Element{
 
+//i is independant
+        char dependancy;
+        String dependant_node_1;
+        String dependant_node_2;
+        String dependant_element;
         double amplitude = 0;
         double frequency = 0;
         double phase = 0;
         public VoltageSource(String in, String out, double value, String type) {
             super(in, out, value, type);
+            dependancy = 'i';
         }
-         public VoltageSource(String in, String out, double value, double amplitude, double frequency, double phase, String type) {
+        public VoltageSource(String in, String out, double value, double amplitude, double frequency, double phase, String type) {
             super(in, out, value, type);
+            dependancy = 'i';
             this.frequency = frequency; 
             this.phase = phase;
             this.amplitude = amplitude;
         }
+
+///voltage dependant voltage source
+        public VoltageSource(String in, String out, double dependant_node_1, double dependant_node_2, double amplitude)
+        {
+          dependancy = 'e';
+          this.dependant_node_1 = dependant_node_1;
+          this.dependant_node_2 = dependant_node_2;
+        }
+//current dependant voltage source
+        public VoltageSource(String in, String out, double dependant_element , double amplitude)
+        {
+          dependancy = 'h';
+          this.dependant_element = dependant_element;
+        }
+
 ///////////returns voltage at time t
-        update()
+        update(SuperNode in, SuperNode out)
         {
-          this.voltage = voltage;;
+          this.voltage = voltage;
         }
 
-        double ReturnVoltage()
+        double ReturnVoltage(SuperNode in, SuperNode out)
         {
-          return this.value + amplitude*Math.sine(Circuit.time*2*Math.PI*frequency + phase); 
-        }
+          if (dependancy == 'i')
+          {
+            return this.value + amplitude*Math.sine(Circuit.time*2*Math.PI*frequency + phase);
+          }
 
+/*
+          else if (dependancy == 'g')
+          {
+            return this.amplitude * (dependant_node_1 - )
+          }            
+
+
+
+
+
+
+
+
+
+
+
+
+
+        }
+*/
     }
 
 
     public static class CurrentSource extends Element{
 
+        char dependancy;
+        String dependant_node_1;
+        String dependant_node_2;
+        String dependant_element;
         public CurrentSource(String in, String out, double value, String type) {
             super(in, out, value, type);
             this.current = value;
         }
 
-        update()
+        update(SuperNode in, SuperNode out)
         {
           this.current = current;
         }
         
-        double return_current()
+        double return_current(SuperNode in, SuperNode out)
         {
           return this.value + amplitude*Math.sine(Circuit.time*2*Math.PI*frequency + phase); 
         }
@@ -372,6 +428,8 @@ public class EC_Simulator {
 
 
         }
+        
+        
         public void Init_Circuit()
         {
           
@@ -416,6 +474,39 @@ public class EC_Simulator {
           {
             //update voltages of nodes inside the supernodes just created
             sn.ModifyVoltage(0);
+          }
+
+          boolean found_in_supernode = false;
+          boolean found_out_supernode = false;
+          int in_node_address = -1;
+          int out_node_address = -1;
+          //find supernodes and nodes of elements and add their addresses to the elements for easy access
+          for (Element e : this.elements)
+          {
+            for (int i = 0 ; i<this.super_nodes.size(); i++)
+            {
+              in_node_address = this.super_nodes.get(i).IsNodeHere(e.in_node_name);
+              if (in_node_address != -1)
+              {
+                e.super_node_1 = i;
+                e.node_1 = in_node_address;
+                found_in_supernode = true;
+              }
+              
+              
+              out_node_address = this.super_nodes.get(i).IsNodeHere(e.out_node_name);
+              if (out_node_address != -1)
+              {
+                e.super_node_2 = i;
+                e.node_2 = out_node_address;
+                found_out_supernode = true;
+              }
+
+              if (found_in_supernode && found_out_supernode)
+              {
+                break;
+              }
+            }
           }
 
         }
@@ -495,7 +586,7 @@ public class EC_Simulator {
             for (SuperNode sn : this.super_nodes)
             {
               //ground voltage is constant
-                if (sn.name.matches("gnd"))
+                if (sn.name.matches("GND"))
                 {
                     continue;
                 }
@@ -517,9 +608,9 @@ public class EC_Simulator {
                       //save the names of the elements connected to the supernode we're updating. 
                       //the connected elements will be updated after supernode is updated
                       element_names.add(n.name);
-                      current_1 -= e.return_current();
+                      current_1 -= e.return_current(this.super_nodes.get(e.super_node_1), this.super_nodes.get(e.super_node_2));
                       sn.ModifyVoltage(dv);
-                      current_1 -= e.return_current();
+                      current_1 -= e.return_current(this.super_nodes.get(e.super_node_1), this.super_nodes.get(e.super_node_2));
                       //undo voltage changes
                       sn.ModifyVoltage(dv*-1);
                     } 
@@ -527,9 +618,9 @@ public class EC_Simulator {
                     if (e.out.matches(n.name))
                     { 
                       element_names.add(n.name);
-                      current_1 += e.return_current();
+                      current_1 += e.return_current(this.super_nodes.get(e.super_node_1), this.super_nodes.get(e.super_node_2));
                       sn.ModifyVoltage(dv);
-                      current_1 += e.return_current();
+                      current_1 += e.return_current(this.super_nodes.get(e.super_node_1), this.super_nodes.get(e.super_node_2));
                       //undo voltage changes
                       sn.ModifyVoltage(dv*-1);
                     }
@@ -573,7 +664,7 @@ public class EC_Simulator {
                 {
                   if (element_names.contains(e.name))
                   {
-                    e.update_element();
+                    e.update_element(this.super_nodes.get(e.super_node_1), this.super_nodes.get(e.super_node_2));
                   }
                 }
             }
