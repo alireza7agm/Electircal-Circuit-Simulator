@@ -9,6 +9,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Scanner;
+import java.lang.Math; 
 
 public class EC_Simulator {
 //////////////////////////////
@@ -80,6 +81,82 @@ public class EC_Simulator {
             }
           return 0;
           
+        }
+
+        void ModifyVoltage(double dv)
+        {
+
+          ArrayList <Node> modified = new ArrayList<Node> ();
+          this.nodes.get(0).voltage += dv;
+          modifed.add(this.nodes.get(0));
+          int counter = 0;
+          while (modified.size()<this.nodes.size() || counter<this.modifed.size())
+          {
+            Node current_node = this.modifed.get(counter);
+            //find nodes connected to current_node
+            for (VoltageSource V : this.voltage_sources)
+            {
+              if (v.out_node_name.matches(current_node.name))
+              {
+                //if the connected node has not been updated
+                boolean node_modified = false;
+                for (Node n : modified)
+                {
+                  if (n.name.matches(v.in_node_name))
+                  {
+                    modified = true;
+                  } 
+                }
+
+                if (!modified)
+                {
+                  //find node and modify voltage
+                  for (Node n : this.nodes)
+                  {
+                    if (n.name.matches(v.in_node_name))
+                    {
+                      n.previous_voltage = n.voltage;
+                      n.voltage = current_node - V.ReturnVoltage();
+                      modified.add(n);
+                      break;
+                    }
+                  }
+                }
+
+              }
+
+              if (v.in_node_name.matches(current_node.name))
+              {
+                //if the connected node has not been updated
+                boolean node_modified = false;
+                for (Node n : modified)
+                {
+                  if (n.name.matches(v.out_node_name))
+                  {
+                    modified = true;
+                  } 
+                }
+
+                if (!modified)
+                {
+                  //find node and modify voltage
+                  for (Node n : this.nodes)
+                  {
+                    if (n.name.matches(v.out_node_name))
+                    {
+                      n.previous_voltage = n.voltage;
+                      n.voltage = current_node + V.ReturnVoltage();
+                      this.modifed.add(n);
+                      break;
+                    }
+                  }
+                }
+              }
+            }
+
+            counter++;
+          }
+
         }
     }
 
@@ -165,7 +242,7 @@ public class EC_Simulator {
           this.current += (in.ReturnVoltage(in_node_name) - out.ReturnVoltage(out_node_name))*Circuit.dt/this.value;
         }
 
-        double 
+        double return_current()
         {
           return (this.current + (in.ReturnVoltage(in_node_name) - out.ReturnVoltage(out_node_name))*Circuit.dt/this.value );
         }
@@ -177,13 +254,27 @@ public class EC_Simulator {
 
     public static class VoltageSource extends Element{
 
+        double amplitude = 0;
+        double frequency = 0;
+        double phase = 0;
         public VoltageSource(String in, String out, double value, String type) {
             super(in, out, value, type);
+        }
+         public VoltageSource(String in, String out, double value, double amplitude, double frequency, double phase, String type) {
+            super(in, out, value, type);
+            this.frequency = frequency; 
+            this.phase = phase;
+            this.amplitude = amplitude;
         }
 ///////////returns voltage at time t
         update()
         {
           this.voltage = voltage;;
+        }
+
+        double ReturnVoltage()
+        {
+          return this.value + amplitude*Math.sine(Circuit.time*2*Math.PI*frequency + phase); 
         }
 
     }
@@ -203,17 +294,18 @@ public class EC_Simulator {
         
         double return_current()
         {
-          return this.current;
+          return this.value + amplitude*Math.sine(Circuit.time*2*Math.PI*frequency + phase); 
         }
 
     }
 
     public static class Circuit{
 
-        ArrayList <Node> nodes;
-        ArrayList <SuperNode> supe_nodes;
-        ArrayList <Element> elements;
-        ArrayList <ArrayList<String>> super_node_lists;
+        ArrayList <Node> nodes = new ArrayList<Node>();
+        ArrayList <SuperNode> super_nodes = new ArrayList<SuperNode>();
+        ArrayList <Element> elements = new ArrayList<Element>();
+        ArrayList <ArrayList<String>> super_node_lists = new ArrayList<ArrayList<String>>();
+        ArrayList<Node> added_nodes = new ArrayList<Node>();
 
         double static time;
         double dv;
@@ -223,27 +315,117 @@ public class EC_Simulator {
 
         public void circuit_initialize(double dv, double dt, double di)
         {
-            super_nodes = new ArrauList<SuperNode>();
-            elements = new ArrayList<Element>();
-            nodes = new ArrayList<Node>();
-            super_node_lists = new ArrayList<ArrayList<String>>();
+            time = 0;
             this.dv = dv;
             this.dt = dt;
             this.di = di;
         }
 
+        void add_neighbor_nodes(int current_node_address)
+        {
+          for (Element e: this.elements)
+          {
+            if (e.in_node_name.matches(added_nodes.get(current_node_address).name))
+            {
+              //find the node connected to current node and add it to added_nodes list
+              for (Node n : this.nodes)
+              {
+                if (n.name.matches(e.out_node_name))
+                {
+                  if (!n.added)
+                  {
+                    if (e.type.matches("V"))
+                    {
+                      n.union = added_nodes.get(current_node_address).union;
+                    }
+                    n.added = true;
+                    added_nodes.add(n);
+                  }
+                }
+               
+              }
+
+            }
+
+            if (e.out_node_name.matches(added_nodes.get(current_node_address).name))
+            {
+              //find the node connected to current node and add it to added_nodes list
+              for (Node n : this.nodes)
+              {
+                if (n.name.matches(e.in_node_name))
+                {
+                  if (!n.added)
+                  {
+                    if (e.type.matches("V"))
+                    {
+                      n.union = added_nodes.get(current_node_address).union;
+                    }
+                    added = true;
+                    added_nodes.add(n);
+                  }
+                  
+                }
+               
+              }
+            }
+          }
+
+
+        }
         public void Init_Circuit()
         {
+          
+          int ground_index = 0;
+          //find ground
+          
+          //////////
+          for (int i =0; i<this.nodes.size(); i++)
+          {
+            if (this.nodes.get(i).name.matches("GND"))
+            {
+              ground_index = i;
+            }
+          }
 
-            
+          this.added_nodes.add(this.nodes.get(i));
+          
+          int counter = 0;
+          while (added_nodes.size()<this.nodes.size() || counter<added_nodes.size())
+          {
+            add_neighbor_nodes(counter);
+            counter++;
+          }
+
+//create super nodes
+          String current_super_node = "";
+          for (Node n : this.added_nodes)
+          {
+            if (!n.union.matches(current_super_node))
+            {
+              SuperNode sn = new SuperNode(n.name);
+              this.super_nodes.add(sn);
+            }
+
+            else
+            {
+              this.super_nodes.get(super_nodes.size()-1).nodes.add(n);
+            }
+          }
+
+          for (sn SuperNode : this.super_nodes)
+          {
+            //update voltages of nodes inside the supernodes just created
+            sn.ModifyVoltage(0);
+          }
+
         }
 
         public void Add_Node(String name)
         {
             ////////////change of arguments
             boolean alreadyCreatedNode = false;
-            for (Node sn : this.nodes){
-                if (sn.name.equals(name))
+            for (Node n : this.nodes){
+                if (n.name.equals(name))
                 {
                     alreadyCreatedNode = true;
                     break;
