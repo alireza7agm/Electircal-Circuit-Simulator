@@ -2,7 +2,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.File;
+import java.io.*;
+import java.nio.file.Files;
 
 public class ECS_Gui {
 
@@ -14,6 +15,10 @@ public class ECS_Gui {
     //INSTRUCTION & ABOUT US PAGES NEED TO BE WRITTEN
     /////////////////////////////////
 
+    static Font f1 = new Font(Font.SERIF, Font.BOLD | Font.ITALIC, 30);
+    static Font f2 = new Font(Font.SERIF, Font.BOLD | Font.ITALIC, 20);
+
+
     public static class startPage extends JFrame implements ActionListener {
 
         JButton openFile, instructionsButton, aboutButton;
@@ -24,11 +29,12 @@ public class ECS_Gui {
             setLocationRelativeTo(null);
             setDefaultCloseOperation(EXIT_ON_CLOSE);
 
-
+            //background
             JLabel background = new JLabel(new ImageIcon("C:\\Users\\alire\\Desktop\\1.JPG"));
             background.setPreferredSize(new Dimension(1422, 800));
             add(background);
 
+            //Open file button
             openFile = new JButton(new ImageIcon("C:\\Users\\alire\\Desktop\\openimage2.png"));
             openFile.setBounds(1140, 35, 150, 150);
             openFile.setContentAreaFilled(false);
@@ -36,17 +42,19 @@ public class ECS_Gui {
             openFile.setBorderPainted(false);
             openFile.addActionListener(this);
 
+            //Instructions Button
             instructionsButton = new JButton(new ImageIcon("C:\\Users\\alire\\Desktop\\info2.png"));
             instructionsButton.setBounds(1140, 310, 150, 150);
             instructionsButton.setOpaque(false);
             instructionsButton.setContentAreaFilled(false);
             instructionsButton.setBorderPainted(false);
 
+
+            //About us button
             aboutButton = new JButton(new ImageIcon("C:\\Users\\alire\\Desktop\\about.png"));
             aboutButton.setBounds(1140, 570, 150, 150);
             aboutButton.setOpaque(false);
             aboutButton.setContentAreaFilled(false);
-            //aboutButton.setBackground(Color.WHITE);
             aboutButton.setBorderPainted(false);
 
 
@@ -58,6 +66,7 @@ public class ECS_Gui {
 
         }
 
+
         @Override
         public void actionPerformed(ActionEvent e){
 
@@ -67,13 +76,17 @@ public class ECS_Gui {
                 fileChooser.showSaveDialog(null);
 
                 File selectedFile = fileChooser.getSelectedFile();
+
                 if (selectedFile.getName().substring(selectedFile.getName().length() - 3).equalsIgnoreCase("txt")){
 
-                    ///////////////new page
+                    // main page opens
+                    this.dispose();
+                    mainPage m = new mainPage(selectedFile);
 
                 }
 
-                else {
+                else
+                {
                     JOptionPane.showMessageDialog(this, "Please Choose a Valid Input",
                             "Invalid File", JOptionPane.ERROR_MESSAGE);
                 }
@@ -97,19 +110,132 @@ public class ECS_Gui {
 
     }
 
-    public static class mainPage extends JFrame {
+
+    public static class mainPage extends JFrame implements ActionListener{
 
         JButton run, load, draw;
+        JTextArea input;
+        JLabel inputName, fileName;
+        File f;
 
-        mainPage(){
-            
+        mainPage(File file){
+
+            f = file;
+
+            setSize(1422, 800);
+            setLocationRelativeTo(null);
+            setDefaultCloseOperation(EXIT_ON_CLOSE);
+
+            //background
+            JLabel background = new JLabel(new ImageIcon("C:\\Users\\alire\\Desktop\\main6.JPG"));
+            background.setPreferredSize(new Dimension(1422, 800));
+            add(background);
 
 
+            //run(build) button
+            run = new JButton();
+            run.setBounds(207,10,108,108);
+            run.setContentAreaFilled(false);
+            run.setOpaque(false);
+            run.setBorderPainted(false);
+            run.addActionListener(this);
+
+            //load(save) button
+            load = new JButton();
+            load.setBounds(651,8,108,110);
+            load.setContentAreaFilled(false);
+            load.setOpaque(false);
+            load.setBorderPainted(false);
+            load.addActionListener(this);
+
+            //Draw Button
+            draw = new JButton();
+            draw.setBounds(1076,10,108,108);
+            draw.setContentAreaFilled(false);
+            draw.setOpaque(false);
+            draw.setBorderPainted(false);
+            draw.addActionListener(this);
+
+
+            background.add(load);
+            background.add(draw);
+            background.add(run);
+
+            try {
+
+                fileName = new JLabel("Input File Name :");
+                fileName.setFont(f2);
+                fileName.setForeground(Color.BLACK);
+                fileName.setBounds(200,150,200,40);
+
+                inputName = new JLabel(file.getName());
+                inputName.setBounds(400, 150, 300, 40);
+                inputName.setBackground(Color.RED);
+                inputName.setOpaque(true);
+                inputName.setHorizontalAlignment(SwingConstants.CENTER);
+                inputName.setVerticalAlignment(SwingConstants.CENTER);
+                inputName.setForeground(Color.BLACK);
+                inputName.setFont(f1);
+
+                background.add(fileName);
+                background.add(inputName);
+
+                input = new JTextArea(Files.readString(file.toPath()));
+                input.setBounds(200,200,500,450);
+                input.setFont(f2);
+                input.setBackground(Color.YELLOW);
+                input.setForeground(Color.BLACK);
+                background.add(input);
+
+            }
+
+            catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            setVisible(true);
 
         }
 
 
+
+        @Override
+        public void actionPerformed(ActionEvent e){
+
+            if (e.getSource() == run){
+
+                //////////////////
+
+            }
+
+            else if (e.getSource() == load){
+
+                String newInput = input.getText();
+
+                try {
+
+                    PrintWriter pw = new PrintWriter(f);
+                    pw.write(newInput);
+                    pw.close();
+
+                }
+                catch (FileNotFoundException ex) {
+                    ex.printStackTrace();
+                }
+
+            }
+
+            else if (e.getSource() == draw){
+
+                //////////////////
+
+            }
+
+        }
+
     }
+
+
 
     public static void main(String[] args){
 
