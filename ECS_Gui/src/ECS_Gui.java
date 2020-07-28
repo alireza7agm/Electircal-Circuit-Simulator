@@ -3,10 +3,11 @@ import javax.swing.border.LineBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
-import java.awt.geom.Ellipse2D;
 import java.io.*;
 import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Scanner;
 import java.util.regex.Matcher;
 
 public class ECS_Gui {
@@ -21,7 +22,6 @@ public class ECS_Gui {
 
     static Font f1 = new Font(Font.SERIF, Font.BOLD | Font.ITALIC, 30);
     static Font f2 = new Font(Font.SERIF, Font.BOLD | Font.ITALIC, 20);
-
 
     public static class startPage extends JFrame implements ActionListener {
 
@@ -113,7 +113,6 @@ public class ECS_Gui {
         }
 
     }
-
 
     public static class mainPage extends JFrame implements ActionListener{
 
@@ -208,9 +207,13 @@ public class ECS_Gui {
 
             if (e.getSource() == run){
 
-                //////////////////
                 this.dispose();
-
+                try {
+                    DrawCircuit circuit = new DrawCircuit(f);
+                }
+                catch (FileNotFoundException ex) {
+                    ex.printStackTrace();
+                }
 
             }
 
@@ -223,6 +226,8 @@ public class ECS_Gui {
                     PrintWriter pw = new PrintWriter(f);
                     pw.write(newInput);
                     pw.close();
+                    JOptionPane.showMessageDialog(this, "File Successfully Updated",
+                            "Updated", JOptionPane.INFORMATION_MESSAGE);
 
                 }
                 catch (FileNotFoundException ex) {
@@ -241,7 +246,7 @@ public class ECS_Gui {
 
     }
 
-    public class Point {
+    public static class Point {
 
         int x;
         int y;
@@ -261,7 +266,7 @@ public class ECS_Gui {
 
     }
 
-    public class Ground extends Point{
+    public static class Ground extends Point{
         boolean used = false;
 
         Ground(int x, int y) {
@@ -274,11 +279,56 @@ public class ECS_Gui {
 
     }
 
-    public class DrawCircuit extends JFrame {
+    public static class DrawCircuit extends JFrame {
 
         Point nodes[] = new Point[31];
         Ground groundNodes[] = new Ground[6];
         Graphics g;
+        JLabel background;
+
+        DrawCircuit(File input) throws FileNotFoundException {
+
+            setSize(1422, 800);
+            setDefaultCloseOperation(EXIT_ON_CLOSE);
+            setLocationRelativeTo(null);
+
+            this.nodeSet();
+
+            background = new JLabel(new ImageIcon("bgOfRun.jpg"));
+            background.setPreferredSize(new Dimension(1422, 800));
+            add(background);
+
+            //saving each line of the input
+            ArrayList<String> lines = new ArrayList<>();
+            Scanner sc = new Scanner(input);
+            while (sc.hasNextLine()){
+                lines.add(sc.nextLine());
+            }
+            sc.close();
+
+            for (int i = 0; i < lines.size(); i++){
+                String[] words = lines.get(i).trim().split("\\s");
+
+                if (words.length == 4){
+                    this.drawBranch(Integer.parseInt(words[1]), Integer.parseInt(words[2]), words[0].charAt(0), ' ');
+                }
+
+                else if (words.length == 7){
+                    if (Integer.parseInt(words[5]) == 0){
+                        this.drawBranch(Integer.parseInt(words[1]), Integer.parseInt(words[2]), words[0].charAt(0), 'D');
+                    }
+                    else {
+                        this.drawBranch(Integer.parseInt(words[1]), Integer.parseInt(words[2]), words[0].charAt(0), 'A');
+                    }
+                }
+
+            }
+
+            this.drawGround();
+
+            setVisible(true);
+
+        }
 
         //method to set all the coordinates
         public void nodeSet(){
@@ -304,15 +354,6 @@ public class ECS_Gui {
 
 
         public void drawBranch(int positiveNode, int negativeNode, char type, char AcDc){
-
-            setSize(1422, 800);
-            setDefaultCloseOperation(EXIT_ON_CLOSE);
-            setLocationRelativeTo(null);
-
-            JLabel background = new JLabel();
-            background.setBounds(361, 160, 700, 600);
-            background.setBorder(new LineBorder(Color.BLACK, 5));
-            add(background);
 
             JLabel element = new JLabel("");
 
@@ -667,17 +708,36 @@ public class ECS_Gui {
 
             }
 
+
             add(background);
-            setVisible(true);
 
         }
 
-    }
+        public void drawGround(){
+            ArrayList<Integer> usedGrounds = new ArrayList<>();
 
+            for (int i = 0; i < 6; i++){
+                if (groundNodes[i].used){
+                    usedGrounds.add(i);
+                }
+            }
+
+            JLabel gnd = new JLabel("GND");
+            gnd.setBounds(groundNodes[0].x - 15, groundNodes[0].y + 15, 20, 20);
+            gnd.setFont(f1);
+            background.add(gnd);
+
+            g.drawLine(groundNodes[0].x, groundNodes[0].y,
+                    groundNodes[Collections.max(usedGrounds)].x, groundNodes[Collections.max(usedGrounds)].y);
+
+        }
+
+
+    }
 
     public static void main(String[] args){
 
-        new startPage();
+        startPage intro = new startPage();
 
     }
 }
