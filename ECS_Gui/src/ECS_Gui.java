@@ -1,9 +1,13 @@
 import javax.swing.*;
+import javax.swing.border.LineBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.geom.Ellipse2D;
 import java.io.*;
 import java.nio.file.Files;
+import java.util.regex.Matcher;
 
 public class ECS_Gui {
 
@@ -205,6 +209,8 @@ public class ECS_Gui {
             if (e.getSource() == run){
 
                 //////////////////
+                this.dispose();
+
 
             }
 
@@ -235,6 +241,288 @@ public class ECS_Gui {
 
     }
 
+    public class Point {
+
+        int x;
+        int y;
+        boolean alreadyConnected = false;
+
+        Point(int x, int y){
+
+            this.x = x;
+            this.y = y;
+
+        }
+
+        public void setAlreadyConnected(){
+
+            this.alreadyConnected = true;
+        }
+
+    }
+
+    public class Ground extends Point{
+        boolean used = false;
+
+        Ground(int x, int y) {
+            super(x, y);
+        }
+
+        public void setUsed(){
+            this.used = true;
+        }
+
+    }
+
+    public class DrawCircuit extends JFrame {
+
+        Point nodes[] = new Point[31];
+        Ground groundNodes[] = new Ground[6];
+        Graphics g;
+
+        //method to set all the coordinates
+        public void nodeSet(){
+
+            nodes[0] = new Point(380, 730);
+
+            for (int i = 0; i < 6; i++){
+                groundNodes[i] = new Ground(380 + 110 * i, 730);
+            }
+
+            for (int i = 0; i < 5; i++){
+                for (int j = i + 1; j < i + 7; j++){
+                    /*
+                    nodes[5 * i + j].x = 380 + (j - i - 1) * 110;
+                    nodes[5 * i + j].y = 70 + (5 - i) * 110;
+                     */
+                    nodes[5 * i + j] = new Point(380 + (j - i - 1) * 110, 70 + (5 - i) * 110);
+                    g.drawOval(nodes[5 * i + j].x, nodes[5 * i + j].y, 5, 5);
+
+                }
+            }
+        }
+
+
+        public void drawBranch(int positiveNode, int negativeNode, char type){
+
+            setSize(1422, 800);
+            setDefaultCloseOperation(EXIT_ON_CLOSE);
+            setLocationRelativeTo(null);
+
+            JLabel background = new JLabel();
+            background.setBounds(361, 160, 700, 600);
+            background.setBorder(new LineBorder(Color.BLACK, 5));
+            add(background);
+
+            JLabel element = new JLabel("");
+
+            nodes[positiveNode].setAlreadyConnected();
+            nodes[negativeNode].setAlreadyConnected();
+
+            if (positiveNode != 0 && negativeNode != 0) {
+                //Horizontal Mode
+                if (Math.abs(positiveNode - negativeNode) == 1) {
+
+                    //part1 wire
+                    g.drawLine(nodes[negativeNode].x, nodes[negativeNode].y, nodes[negativeNode].x + 15, nodes[negativeNode].y);
+
+
+                    //element
+                    switch (type) {
+
+                        case 'R':
+                            element = new JLabel(new ImageIcon("rx.png"));
+                            element.setPreferredSize(new Dimension(80, 30));
+                            break;
+
+                        case 'L':
+                            element = new JLabel(new ImageIcon("lx.png"));
+                            element.setPreferredSize(new Dimension(80, 27));
+                            break;
+
+                        case 'C':
+                            element = new JLabel(new ImageIcon("cx.png"));
+                            element.setPreferredSize(new Dimension(80, 38));
+                            break;
+
+                        case 'V':
+                            if (positiveNode - negativeNode > 0) {
+                                element = new JLabel(new ImageIcon("vdcxR.png"));
+                                element.setPreferredSize(new Dimension(80, 45));
+                            } else if (positiveNode - negativeNode < 0) {
+                                element = new JLabel(new ImageIcon("vdcxL.png"));
+                                element.setPreferredSize(new Dimension(80, 45));
+                            }
+                            break;
+
+                        case 'I':
+                            if (positiveNode - negativeNode > 0) {
+                                element = new JLabel(new ImageIcon("IdcxR.png"));
+                                element.setPreferredSize(new Dimension(80, 51));
+                            } else if (positiveNode - negativeNode < 0) {
+                                element = new JLabel(new ImageIcon("IdcxL.png"));
+                                element.setPreferredSize(new Dimension(80, 51));
+                            }
+                            break;
+
+                        default:
+                            //
+                            break;
+
+                    }
+                    background.add(element);
+
+
+                    //part2 wire
+                    g.drawLine(nodes[positiveNode].x - 15, nodes[positiveNode].y, nodes[positiveNode].x, nodes[positiveNode].y);
+
+                }
+
+                //Vertical Mode
+                else if (Math.abs(positiveNode - negativeNode) == 6) {
+
+                    //part1 wire
+                    g.drawLine(nodes[negativeNode].x, nodes[negativeNode].y, nodes[negativeNode].x, nodes[negativeNode].y + 15);
+
+
+                    //element
+                    switch (type) {
+
+                        case 'R':
+                            element = new JLabel(new ImageIcon("ry.png"));
+                            element.setPreferredSize(new Dimension(30, 80));
+                            break;
+
+                        case 'L':
+                            element = new JLabel(new ImageIcon("ly.png"));
+                            element.setPreferredSize(new Dimension(27, 80));
+                            break;
+
+                        case 'C':
+                            element = new JLabel(new ImageIcon("cy.png"));
+                            element.setPreferredSize(new Dimension(38, 80));
+                            break;
+
+                        case 'V':
+                            if (positiveNode - negativeNode > 0) {
+                                element = new JLabel(new ImageIcon("vdcyU.png"));
+                                element.setPreferredSize(new Dimension(45, 80));
+                            }
+                            else if (positiveNode - negativeNode < 0) {
+                                element = new JLabel(new ImageIcon("vdcyD.png"));
+                                element.setPreferredSize(new Dimension(45, 80));
+                            }
+                            break;
+
+                        case 'I':
+                            if (positiveNode - negativeNode > 0) {
+                                element = new JLabel(new ImageIcon("IdcyU.png"));
+                                element.setPreferredSize(new Dimension(51, 80));
+                            }
+                            else if (positiveNode - negativeNode < 0) {
+                                element = new JLabel(new ImageIcon("IdcyD.png"));
+                                element.setPreferredSize(new Dimension(51, 80));
+                            }
+                            break;
+
+                        default:
+                            //
+                            break;
+
+                    }
+                    background.add(element);
+
+
+                    //part2 wire
+                    g.drawLine(nodes[positiveNode].x, nodes[positiveNode].y - 15, nodes[positiveNode].x, nodes[positiveNode].y);
+
+                }
+            }
+
+            else if (positiveNode == 0 || negativeNode == 0){
+                int ground = 0;
+                int nonGround = 0;
+
+                if (positiveNode == 0) {
+
+                    ground = positiveNode;
+                    nonGround = negativeNode;
+
+                }
+                else if (negativeNode == 0){
+
+                    ground = negativeNode;
+                    nonGround = positiveNode;
+
+                }
+                groundNodes[nonGround - 1].setUsed();
+
+                //part1 wire
+                g.drawLine(groundNodes[nonGround - 1].x, groundNodes[nonGround - 1].y,
+                        groundNodes[nonGround - 1].x, groundNodes[nonGround - 1].y - 15);
+
+
+                //element
+                switch (type) {
+
+                    case 'R':
+                        element = new JLabel(new ImageIcon("ry.png"));
+                        element.setPreferredSize(new Dimension(30, 80));
+                        break;
+
+                    case 'L':
+                        element = new JLabel(new ImageIcon("ly.png"));
+                        element.setPreferredSize(new Dimension(27, 80));
+                        break;
+
+                    case 'C':
+                        element = new JLabel(new ImageIcon("cy.png"));
+                        element.setPreferredSize(new Dimension(38, 80));
+                        break;
+
+                    case 'V':
+                        if (negativeNode == 0) {
+                            element = new JLabel(new ImageIcon("vdcyU.png"));
+                            element.setPreferredSize(new Dimension(45, 80));
+                        }
+                        else if (positiveNode == 0) {
+                            element = new JLabel(new ImageIcon("vdcyD.png"));
+                            element.setPreferredSize(new Dimension(45, 80));
+                        }
+                        break;
+
+                    case 'I':
+                        if (negativeNode == 0) {
+                            element = new JLabel(new ImageIcon("IdcyU.png"));
+                            element.setPreferredSize(new Dimension(51, 80));
+                        }
+                        else if (positiveNode == 0) {
+                            element = new JLabel(new ImageIcon("IdcyD.png"));
+                            element.setPreferredSize(new Dimension(51, 80));
+                        }
+                        break;
+
+                    default:
+                        //
+                        break;
+
+                }
+                background.add(element);
+
+
+                //part2 wire
+                g.drawLine(nodes[nonGround].x, nodes[nonGround].y + 15 , nodes[nonGround].x, nodes[nonGround].y);
+
+
+            }
+
+
+            add(background);
+            setVisible(true);
+
+        }
+
+    }
 
 
     public static void main(String[] args){
