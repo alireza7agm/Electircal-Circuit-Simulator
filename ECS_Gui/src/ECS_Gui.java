@@ -1,5 +1,6 @@
 import javax.swing.*;
 import javax.swing.border.LineBorder;
+import javax.xml.stream.events.Characters;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -34,7 +35,7 @@ public class ECS_Gui {
             setDefaultCloseOperation(EXIT_ON_CLOSE);
 
             //background
-            JLabel background = new JLabel(new ImageIcon("C:\\Users\\alire\\Desktop\\1.JPG"));
+            JLabel background = new JLabel(new ImageIcon("C:\\Users\\alire\\Desktop\\1.jpg"));
             background.setPreferredSize(new Dimension(1422, 800));
             add(background);
 
@@ -130,7 +131,7 @@ public class ECS_Gui {
             setDefaultCloseOperation(EXIT_ON_CLOSE);
 
             //background
-            JLabel background = new JLabel(new ImageIcon("C:\\Users\\alire\\Desktop\\main6.JPG"));
+            JLabel background = new JLabel(new ImageIcon("C:\\Users\\alire\\Desktop\\main6.jpg"));
             background.setPreferredSize(new Dimension(1422, 800));
             add(background);
 
@@ -250,12 +251,13 @@ public class ECS_Gui {
 
         int x;
         int y;
-        boolean alreadyConnected = false;
+        boolean alreadyConnected;
 
         Point(int x, int y){
 
             this.x = x;
             this.y = y;
+            this.alreadyConnected = false;
 
         }
 
@@ -283,7 +285,6 @@ public class ECS_Gui {
 
         Point nodes[] = new Point[31];
         Ground groundNodes[] = new Ground[6];
-        Graphics g;
         JLabel background;
 
         DrawCircuit(File input) throws FileNotFoundException {
@@ -307,19 +308,31 @@ public class ECS_Gui {
             sc.close();
 
             for (int i = 0; i < lines.size(); i++){
+
                 String[] words = lines.get(i).trim().split("\\s");
 
-                if (words.length == 4){
-                    this.drawBranch(Integer.parseInt(words[1]), Integer.parseInt(words[2]), words[0].charAt(0), ' ');
+                if (words[0].charAt(0) == '*' || lines.get(i).equals(".tran")){
+                    //siktir
                 }
 
-                else if (words.length == 7){
-                    if (Integer.parseInt(words[5]) == 0){
-                        this.drawBranch(Integer.parseInt(words[1]), Integer.parseInt(words[2]), words[0].charAt(0), 'D');
+                else {
+
+                    if (words.length == 4) {
+                        this.drawBranch(Integer.parseInt(words[1]), Integer.parseInt(words[2]),
+                                Character.toUpperCase(words[0].charAt(0)), ' ');
                     }
-                    else {
-                        this.drawBranch(Integer.parseInt(words[1]), Integer.parseInt(words[2]), words[0].charAt(0), 'A');
+                    else if (words.length == 7) {
+
+                        if (Integer.parseInt(words[5]) == 0) {
+                            this.drawBranch(Integer.parseInt(words[1]), Integer.parseInt(words[2]),
+                                    Character.toUpperCase(words[0].charAt(0)), 'D');
+                        }
+                        else {
+                            this.drawBranch(Integer.parseInt(words[1]), Integer.parseInt(words[2]),
+                                    Character.toUpperCase(words[0].charAt(0)), 'A');
+                        }
                     }
+
                 }
 
             }
@@ -346,7 +359,7 @@ public class ECS_Gui {
                     nodes[5 * i + j].y = 70 + (5 - i) * 110;
                      */
                     nodes[5 * i + j] = new Point(380 + (j - i - 1) * 110, 70 + (5 - i) * 110);
-                    g.drawOval(nodes[5 * i + j].x, nodes[5 * i + j].y, 5, 5);
+                    //g.drawOval(nodes[5 * i + j].x, nodes[5 * i + j].y, 5, 5);
 
                 }
             }
@@ -367,59 +380,55 @@ public class ECS_Gui {
                     int leftOne = Math.min(positiveNode, negativeNode);
                     int rightOne = Math.max(positiveNode, negativeNode);
 
-                    //part1 wire
-                    g.drawLine(nodes[leftOne].x, nodes[leftOne].y, nodes[leftOne].x + 15, nodes[leftOne].y);
-
-
                     //element
                     switch (type) {
 
                         case 'R':
                             element = new JLabel(new ImageIcon("rx.png"));
-                            element.setPreferredSize(new Dimension(80, 30));
-                            element.setBounds(nodes[leftOne].x + 15, nodes[leftOne].y - 15, 80, 30);
+                            element.setPreferredSize(new Dimension(110, 53));
+                            element.setBounds(nodes[leftOne].x, nodes[leftOne].y - 27, 110, 53);
                             break;
 
                         case 'L':
                             element = new JLabel(new ImageIcon("lx.png"));
-                            element.setPreferredSize(new Dimension(80, 27));
-                            element.setBounds(nodes[leftOne].x + 15, nodes[leftOne].y - 14, 80, 27);
+                            element.setPreferredSize(new Dimension(110, 37));
+                            element.setBounds(nodes[leftOne].x, nodes[leftOne].y - 19, 110, 37);
                             break;
 
                         case 'C':
                             element = new JLabel(new ImageIcon("cx.png"));
-                            element.setPreferredSize(new Dimension(80, 38));
-                            element.setBounds(nodes[leftOne].x + 15, nodes[leftOne].y - 19, 80, 38);
+                            element.setPreferredSize(new Dimension(110, 52));
+                            element.setBounds(nodes[leftOne].x, nodes[leftOne].y - 26, 110, 52);
                             break;
 
                         case 'V':
                             if (positiveNode - negativeNode > 0) {
                                 switch (AcDc) {
                                     case 'D':
-                                        element = new JLabel(new ImageIcon("vdcxR.png"));
-                                        element.setPreferredSize(new Dimension(80, 45));
-                                        element.setBounds(nodes[leftOne].x + 15, nodes[leftOne].y - 23, 80, 45);
+                                        element = new JLabel(new ImageIcon("vdcR.png"));
+                                        element.setPreferredSize(new Dimension(110, 72));
+                                        element.setBounds(nodes[leftOne].x, nodes[leftOne].y - 36, 110, 72);
                                         break;
 
                                     case 'A':
                                         element = new JLabel(new ImageIcon("acx.png"));
-                                        element.setPreferredSize(new Dimension(80, 52));
-                                        element.setBounds(nodes[leftOne].x + 15, nodes[leftOne].y - 26, 80, 52);
+                                        element.setPreferredSize(new Dimension(110, 71));
+                                        element.setBounds(nodes[leftOne].x, nodes[leftOne].y - 36, 110, 71);
                                         break;
                                 }
                             }
                             else if (positiveNode - negativeNode < 0) {
                                 switch (AcDc) {
                                     case 'D':
-                                        element = new JLabel(new ImageIcon("vdcxL.png"));
-                                        element.setPreferredSize(new Dimension(80, 45));
-                                        element.setBounds(nodes[leftOne].x + 15, nodes[leftOne].y - 23, 80, 45);
+                                        element = new JLabel(new ImageIcon("vdcL.png"));
+                                        element.setPreferredSize(new Dimension(110, 72));
+                                        element.setBounds(nodes[leftOne].x, nodes[leftOne].y - 36, 110, 72);
                                         break;
 
                                     case 'A':
                                         element = new JLabel(new ImageIcon("acx.png"));
-                                        element.setPreferredSize(new Dimension(80, 52));
-                                        element.setBounds(nodes[leftOne].x + 15, nodes[leftOne].y - 26, 80, 52);
+                                        element.setPreferredSize(new Dimension(110, 71));
+                                        element.setBounds(nodes[leftOne].x, nodes[leftOne].y - 36, 110, 71);
                                         break;
                                 }
                             }
@@ -430,30 +439,30 @@ public class ECS_Gui {
                             if (positiveNode - negativeNode > 0) {
                                 switch (AcDc) {
                                     case 'D':
-                                        element = new JLabel(new ImageIcon("IdcxR.png"));
-                                        element.setPreferredSize(new Dimension(80, 51));
-                                        element.setBounds(nodes[leftOne].x + 15, nodes[leftOne].y - 26, 80, 51);
+                                        element = new JLabel(new ImageIcon("IdcR.png"));
+                                        element.setPreferredSize(new Dimension(110, 71));
+                                        element.setBounds(nodes[leftOne].x, nodes[leftOne].y - 36, 110, 71);
                                         break;
 
                                     case 'A':
                                         element = new JLabel(new ImageIcon("acx.png"));
-                                        element.setPreferredSize(new Dimension(80, 52));
-                                        element.setBounds(nodes[leftOne].x + 15, nodes[leftOne].y - 26, 80, 52);
+                                        element.setPreferredSize(new Dimension(110, 71));
+                                        element.setBounds(nodes[leftOne].x, nodes[leftOne].y - 36, 110, 71);
                                         break;
                                 }
                             }
                             else if (positiveNode - negativeNode < 0) {
                                 switch (AcDc) {
                                     case 'D':
-                                        element = new JLabel(new ImageIcon("IdcxR.png"));
-                                        element.setPreferredSize(new Dimension(80, 51));
-                                        element.setBounds(nodes[leftOne].x + 15, nodes[leftOne].y - 26, 80, 51);
+                                        element = new JLabel(new ImageIcon("IdcL.png"));
+                                        element.setPreferredSize(new Dimension(110, 71));
+                                        element.setBounds(nodes[leftOne].x, nodes[leftOne].y - 36, 110, 71);
                                         break;
 
                                     case 'A':
                                         element = new JLabel(new ImageIcon("acx.png"));
-                                        element.setPreferredSize(new Dimension(80, 52));
-                                        element.setBounds(nodes[leftOne].x + 15, nodes[leftOne].y - 26, 80, 52);
+                                        element.setPreferredSize(new Dimension(110, 71));
+                                        element.setBounds(nodes[leftOne].x, nodes[leftOne].y - 36, 110, 71);
                                         break;
                                 }
                             }
@@ -466,10 +475,6 @@ public class ECS_Gui {
 
                     }
                     background.add(element);
-
-
-                    //part2 wire
-                    g.drawLine(nodes[rightOne].x - 15, nodes[rightOne].y, nodes[rightOne].x, nodes[rightOne].y);
 
                 }
 
@@ -479,59 +484,56 @@ public class ECS_Gui {
                     int downOne = Math.min(positiveNode, negativeNode);
                     int upOne = Math.max(positiveNode, negativeNode);
 
-                    //part1 wire
-                    g.drawLine(nodes[upOne].x, nodes[upOne].y, nodes[upOne].x, nodes[upOne].y + 15);
-
 
                     //element
                     switch (type) {
 
                         case 'R':
                             element = new JLabel(new ImageIcon("ry.png"));
-                            element.setPreferredSize(new Dimension(30, 80));
-                            element.setBounds(nodes[upOne].x - 15, nodes[upOne].y + 15, 30, 80);
+                            element.setPreferredSize(new Dimension(53, 110));
+                            element.setBounds(nodes[upOne].x - 27, nodes[upOne].y, 53, 110);
                             break;
 
                         case 'L':
                             element = new JLabel(new ImageIcon("ly.png"));
-                            element.setPreferredSize(new Dimension(27, 80));
-                            element.setBounds(nodes[upOne].x - 14, nodes[upOne].y + 15, 27, 80);
+                            element.setPreferredSize(new Dimension(37, 110));
+                            element.setBounds(nodes[upOne].x - 19, nodes[upOne].y, 37, 110);
                             break;
 
                         case 'C':
                             element = new JLabel(new ImageIcon("cy.png"));
-                            element.setPreferredSize(new Dimension(38, 80));
-                            element.setBounds(nodes[upOne].x - 19, nodes[upOne].y + 15, 38, 80);
+                            element.setPreferredSize(new Dimension(52, 110));
+                            element.setBounds(nodes[upOne].x - 26, nodes[upOne].y , 52, 110);
                             break;
 
                         case 'V':
                             if (positiveNode - negativeNode > 0) {
                                 switch (AcDc) {
                                     case 'D':
-                                        element = new JLabel(new ImageIcon("vdcyU.png"));
-                                        element.setPreferredSize(new Dimension(45, 80));
-                                        element.setBounds(nodes[upOne].x - 23, nodes[upOne].y + 15, 45, 80);
+                                        element = new JLabel(new ImageIcon("vdcU.png"));
+                                        element.setPreferredSize(new Dimension(72, 110));
+                                        element.setBounds(nodes[upOne].x - 36, nodes[upOne].y, 72, 110);
                                         break;
 
                                     case 'A':
                                         element = new JLabel(new ImageIcon("acy.png"));
-                                        element.setPreferredSize(new Dimension(52, 80));
-                                        element.setBounds(nodes[upOne].x - 26, nodes[upOne].y + 15, 52, 80);
+                                        element.setPreferredSize(new Dimension(71, 110));
+                                        element.setBounds(nodes[upOne].x - 36, nodes[upOne].y, 71, 110);
                                         break;
                                 }
                             }
                             else if (positiveNode - negativeNode < 0) {
                                 switch (AcDc) {
                                     case 'D':
-                                        element = new JLabel(new ImageIcon("vdcyD.png"));
-                                        element.setPreferredSize(new Dimension(45, 80));
-                                        element.setBounds(nodes[upOne].x - 23, nodes[upOne].y + 15, 45, 80);
+                                        element = new JLabel(new ImageIcon("vdcD.png"));
+                                        element.setPreferredSize(new Dimension(72, 110));
+                                        element.setBounds(nodes[upOne].x - 36, nodes[upOne].y, 72, 110);
                                         break;
 
                                     case 'A':
                                         element = new JLabel(new ImageIcon("acy.png"));
-                                        element.setPreferredSize(new Dimension(52, 80));
-                                        element.setBounds(nodes[upOne].x - 26, nodes[upOne].y + 15, 52, 80);
+                                        element.setPreferredSize(new Dimension(71, 110));
+                                        element.setBounds(nodes[upOne].x - 36, nodes[upOne].y, 71, 110);
                                         break;
                                 }
                             }
@@ -541,30 +543,30 @@ public class ECS_Gui {
                             if (positiveNode - negativeNode > 0) {
                                 switch (AcDc) {
                                     case 'D':
-                                        element = new JLabel(new ImageIcon("IdcyU.png"));
-                                        element.setPreferredSize(new Dimension(51, 80));
-                                        element.setBounds(nodes[upOne].x - 26, nodes[upOne].y + 15, 51, 80);
+                                        element = new JLabel(new ImageIcon("IdcU.png"));
+                                        element.setPreferredSize(new Dimension(71, 110));
+                                        element.setBounds(nodes[upOne].x - 36, nodes[upOne].y, 71, 110);
                                         break;
 
                                     case 'A':
                                         element = new JLabel(new ImageIcon("acy.png"));
-                                        element.setPreferredSize(new Dimension(52, 80));
-                                        element.setBounds(nodes[upOne].x - 26, nodes[upOne].y + 15, 52, 80);
+                                        element.setPreferredSize(new Dimension(71, 110));
+                                        element.setBounds(nodes[upOne].x - 36, nodes[upOne].y, 71, 110);
                                         break;
                                 }
                             }
                             else if (positiveNode - negativeNode < 0) {
                                 switch (AcDc) {
                                     case 'D':
-                                        element = new JLabel(new ImageIcon("IdcyD.png"));
-                                        element.setPreferredSize(new Dimension(51, 80));
-                                        element.setBounds(nodes[upOne].x - 26, nodes[upOne].y + 15, 51, 80);
+                                        element = new JLabel(new ImageIcon("IdcD.png"));
+                                        element.setPreferredSize(new Dimension(71, 110));
+                                        element.setBounds(nodes[upOne].x - 36, nodes[upOne].y, 71, 110);
                                         break;
 
                                     case 'A':
                                         element = new JLabel(new ImageIcon("acy.png"));
-                                        element.setPreferredSize(new Dimension(52, 80));
-                                        element.setBounds(nodes[upOne].x - 26, nodes[upOne].y + 15, 52, 80);
+                                        element.setPreferredSize(new Dimension(71, 110));
+                                        element.setBounds(nodes[upOne].x - 36, nodes[upOne].y, 71, 110);
                                         break;
                                 }
                             }
@@ -577,9 +579,6 @@ public class ECS_Gui {
                     }
                     background.add(element);
 
-
-                    //part2 wire
-                    g.drawLine(nodes[downOne].x, nodes[downOne].y - 15, nodes[downOne].x, nodes[downOne].y);
 
                 }
             }
@@ -602,60 +601,56 @@ public class ECS_Gui {
                 }
                 groundNodes[nonGround - 1].setUsed();
 
-                //part1 wire
-                g.drawLine(groundNodes[nonGround - 1].x, groundNodes[nonGround - 1].y,
-                        groundNodes[nonGround - 1].x, groundNodes[nonGround - 1].y - 15);
-
 
                 //element
                 switch (type) {
 
                     case 'R':
                         element = new JLabel(new ImageIcon("ry.png"));
-                        element.setPreferredSize(new Dimension(30, 80));
-                        element.setBounds(nodes[nonGround].x - 15, nodes[nonGround].y + 15, 30, 80);
+                        element.setPreferredSize(new Dimension(53, 110));
+                        element.setBounds(nodes[nonGround].x - 27, nodes[nonGround].y, 53, 110);
                         break;
 
                     case 'L':
                         element = new JLabel(new ImageIcon("ly.png"));
-                        element.setPreferredSize(new Dimension(27, 80));
-                        element.setBounds(nodes[nonGround].x - 14, nodes[nonGround].y + 15, 27, 80);
+                        element.setPreferredSize(new Dimension(37, 110));
+                        element.setBounds(nodes[nonGround].x - 19, nodes[nonGround].y, 37, 110);
                         break;
 
                     case 'C':
                         element = new JLabel(new ImageIcon("cy.png"));
-                        element.setPreferredSize(new Dimension(38, 80));
-                        element.setBounds(nodes[nonGround].x - 19, nodes[nonGround].y + 15, 38, 80);
+                        element.setPreferredSize(new Dimension(52, 110));
+                        element.setBounds(nodes[nonGround].x - 26, nodes[nonGround].y, 52, 110);
                         break;
 
                     case 'V':
                         if (negativeNode == 0) {
                             switch (AcDc) {
                                 case 'D':
-                                    element = new JLabel(new ImageIcon("vdcyU.png"));
-                                    element.setPreferredSize(new Dimension(45, 80));
-                                    element.setBounds(nodes[nonGround].x - 23, nodes[nonGround].y + 15, 45, 80);
+                                    element = new JLabel(new ImageIcon("vdcU.png"));
+                                    element.setPreferredSize(new Dimension(72, 110));
+                                    element.setBounds(nodes[nonGround].x - 36, nodes[nonGround].y, 72, 110);
                                     break;
 
                                 case 'A':
                                     element = new JLabel(new ImageIcon("acy.png"));
-                                    element.setPreferredSize(new Dimension(52,80));
-                                    element.setBounds(nodes[nonGround].x - 26, nodes[nonGround].y + 15, 52, 80);
+                                    element.setPreferredSize(new Dimension(71,110));
+                                    element.setBounds(nodes[nonGround].x - 36, nodes[nonGround].y, 71, 110);
                                     break;
                             }
                         }
                         else if (positiveNode == 0) {
                             switch (AcDc) {
                                 case 'D':
-                                    element = new JLabel(new ImageIcon("vdcyD.png"));
-                                    element.setPreferredSize(new Dimension(45, 80));
-                                    element.setBounds(nodes[nonGround].x - 23, nodes[nonGround].y + 15, 45, 80);
+                                    element = new JLabel(new ImageIcon("vdcD.png"));
+                                    element.setPreferredSize(new Dimension(72, 110));
+                                    element.setBounds(nodes[nonGround].x - 36, nodes[nonGround].y, 72, 110);
                                     break;
 
                                 case 'A':
                                     element = new JLabel(new ImageIcon("acy.png"));
-                                    element.setPreferredSize(new Dimension(52,80));
-                                    element.setBounds(nodes[nonGround].x - 26, nodes[nonGround].y + 15, 52, 80);
+                                    element.setPreferredSize(new Dimension(71,110));
+                                    element.setBounds(nodes[nonGround].x - 36, nodes[nonGround].y, 71, 110);
                                     break;
                             }
                         }
@@ -665,30 +660,30 @@ public class ECS_Gui {
                         if (negativeNode == 0) {
                             switch (AcDc) {
                                 case 'D':
-                                    element = new JLabel(new ImageIcon("IdcyU.png"));
-                                    element.setPreferredSize(new Dimension(51, 80));
-                                    element.setBounds(nodes[nonGround].x - 26, nodes[nonGround].y + 15, 51, 80);
+                                    element = new JLabel(new ImageIcon("IdcU.png"));
+                                    element.setPreferredSize(new Dimension(71, 110));
+                                    element.setBounds(nodes[nonGround].x - 36, nodes[nonGround].y, 71, 110);
                                     break;
 
                                 case 'A':
                                     element = new JLabel(new ImageIcon("acy.png"));
-                                    element.setPreferredSize(new Dimension(52,80));
-                                    element.setBounds(nodes[nonGround].x - 26, nodes[nonGround].y + 15, 52, 80);
+                                    element.setPreferredSize(new Dimension(71,110));
+                                    element.setBounds(nodes[nonGround].x - 36, nodes[nonGround].y, 71, 110);
                                     break;
                             }
                         }
                         else if (positiveNode == 0) {
                             switch (AcDc) {
                                 case 'D':
-                                    element = new JLabel(new ImageIcon("IdcyD.png"));
-                                    element.setPreferredSize(new Dimension(51, 80));
-                                    element.setBounds(nodes[nonGround].x - 26, nodes[nonGround].y + 15, 51, 80);
+                                    element = new JLabel(new ImageIcon("IdcD.png"));
+                                    element.setPreferredSize(new Dimension(71, 110));
+                                    element.setBounds(nodes[nonGround].x - 36, nodes[nonGround].y, 71, 110);
                                     break;
 
                                 case 'A':
                                     element = new JLabel(new ImageIcon("acy.png"));
-                                    element.setPreferredSize(new Dimension(52,80));
-                                    element.setBounds(nodes[nonGround].x - 26, nodes[nonGround].y + 15, 52, 80);
+                                    element.setPreferredSize(new Dimension(71,110));
+                                    element.setBounds(nodes[nonGround].x - 36, nodes[nonGround].y, 71, 110);
                                     break;
                             }
                         }
@@ -700,11 +695,6 @@ public class ECS_Gui {
 
                 }
                 background.add(element);
-
-
-                //part2 wire
-                g.drawLine(nodes[nonGround].x, nodes[nonGround].y + 15 , nodes[nonGround].x, nodes[nonGround].y);
-
 
             }
 
@@ -727,17 +717,16 @@ public class ECS_Gui {
             gnd.setFont(f1);
             background.add(gnd);
 
-            g.drawLine(groundNodes[0].x, groundNodes[0].y,
-                    groundNodes[Collections.max(usedGrounds)].x, groundNodes[Collections.max(usedGrounds)].y);
 
         }
 
 
     }
 
-    public static void main(String[] args){
+    public static void main(String[] args) throws FileNotFoundException {
 
         startPage intro = new startPage();
+        //DrawCircuit dc = new DrawCircuit(new File("C:\\Users\\alire\\Desktop\\input1.txt"));
 
     }
 }
