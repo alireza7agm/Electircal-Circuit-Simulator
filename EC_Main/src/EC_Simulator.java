@@ -45,6 +45,8 @@ public class EC_Simulator {
         SuperNode(Node base_node)
         {
           nodes = new ArrayList<Node>();
+          nodes.add(base_node);
+          this.name = base_node.name;
           voltage_sources = new ArrayList<VoltageSource>();
           base_voltage = base_node.voltage;
           
@@ -387,6 +389,7 @@ public class EC_Simulator {
 
         public void circuit_initialize(double dv, double dt, double di)
         {
+        	this.dt = dt;
             this.dv = dv;
             this.di = di;
         }
@@ -458,9 +461,8 @@ public class EC_Simulator {
               ground_index = i;
             }
           }
-
           this.added_nodes.add(this.nodes.get(ground_index));
-          
+          this.added_nodes.get(0).added = true;
           int counter = 0;
           while (added_nodes.size()<this.nodes.size())
           {
@@ -469,54 +471,77 @@ public class EC_Simulator {
           }
 
 //create super nodes
-          String current_super_node = "";
+          ArrayList<String> current_super_nodes = new ArrayList<String>();
           for (Node n : this.added_nodes)
           {
-            if (!n.union.matches(current_super_node))
+        	  
+            if (!current_super_nodes.contains((String) n.union))
             {
               SuperNode sn = new SuperNode(n);
               this.super_nodes.add(sn);
-              current_super_node = n.union;
+              current_super_nodes.add(n.union);
             }
 
             else
             {
-              this.super_nodes.get(super_nodes.size()-1).nodes.add(n);
+            	for (SuperNode sn: this.super_nodes)
+            	{
+            		if (sn.name.matches(n.union))
+            		{
+            			sn.nodes.add(n);
+            			String super_node_name = sn.name;
+                        boolean voltage_source_found = false;
+                        for (Element e: this.elements)
+                        {
+                      	  if (e.type.matches("V"))
+                      	  {
+                      		  if (e.in_node_name.matches(super_node_name))
+                      		  {
+                      			  if (e.out_node_name.matches(n.name))
+                      			  {
+                      				  voltage_source_found = true;
+                      				  sn.voltage_sources.add((VoltageSource) e);
+                      			  }
+                      			  
+                      		  }
+                      		  
+                      		  if (e.out_node_name.matches(super_node_name))
+                      		  {
+                      			  if (e.in_node_name.matches(n.name))
+                      			  {
+                      				  voltage_source_found = true;
+                      				  sn.voltage_sources.add((VoltageSource) e);
+                      			  }
+                      		  }
+                      	  }
+                        }
+                        
+                        if (!voltage_source_found)
+                        {
+                      	  System.out.println("Voltage Source Not Found");
+                        }
+                        break;
+            			}
+            		
+            		
+            		}
+            		
+            	}
               //add the voltage source connecting this node to the super node, to the super node!
-              String super_node_name = this.super_nodes.get(super_nodes.size()-1).name;
-              boolean voltage_source_found = false;
-              for (Element e: this.elements)
-              {
-            	  if (e.type.matches("V"))
-            	  {
-            		  if (e.in_node_name.matches(super_node_name))
-            		  {
-            			  if (e.out_node_name.matches(n.name))
-            			  {
-            				  voltage_source_found = true;
-            				  this.super_nodes.get(super_nodes.size()-1).voltage_sources.add((VoltageSource) e);
-            			  }
-            			  
-            		  }
-            		  
-            		  if (e.out_node_name.matches(super_node_name))
-            		  {
-            			  if (e.in_node_name.matches(n.name))
-            			  {
-            				  voltage_source_found = true;
-            				  this.super_nodes.get(super_nodes.size()-1).voltage_sources.add((VoltageSource) e);
-            			  }
-            		  }
-            	  }
-              }
               
-              if (!voltage_source_found)
-              {
-            	  System.out.println("Voltage Source Not Found");
-              }
-            }
           }
 
+          for (SuperNode sn: this.super_nodes)
+          {
+        	  System.out.println("size"+sn.nodes.size());
+        	  System.out.println(sn.name);
+          }
+          
+          for (Node n : this.added_nodes)
+          {
+        	  System.out.println("**"+n.union);
+          }
+          
           for ( SuperNode sn : this.super_nodes)
           {
             //update voltages of nodes inside the supernodes just created
@@ -731,12 +756,16 @@ public class EC_Simulator {
         
         void Analyse(double t)
         {
-        	long iterations = (int) (t/this.dt);
+        	int iterations = 50;
+        	System.out.println(t/this.dt);
         	for (int i =0; i<iterations; i++)
         	{
+        	
         		this.Update_Nodes();
         		time += dt;
+        		
         	}
+            
         }
         
         void Show_Results()
@@ -776,79 +805,76 @@ public class EC_Simulator {
                 lines.add(sc.nextLine().trim());
                 String info[] = lines.get(cnt).split("\\s");
 
-                if (!lines.get(cnt).substring(0, 5).equals(".tran")) {
-
+                if (!lines.get(cnt).substring(0, 5).equals(".tran") && lines.get(cnt).charAt(0) != 'd') {
+                
                     Node in = new Node(info[1]);
                     eC.Add_Node(info[1]);
                     Node out = new Node(info[2]);
                     eC.Add_Node(info[2]);
+                    
+                	switch (lines.get(cnt).charAt(0)) {
 
+                    case 'R':
+                        eC.Add_Element(in.name, out.name, Double.parseDouble(info[3]), 0, "R");
+                        break;
+                    case 'C':
+                        eC.Add_Element(in.name, out.name, Double.parseDouble(info[3]), 0, "C");
+                        break;
+                    case 'L':
+                        eC.Add_Element(in.name, out.name, Double.parseDouble(info[3]), 0, "L");
+                        break;
+                    case 'V':
+                        eC.Add_Element(in.name, out.name, Double.parseDouble(info[3]), 0, "V");
+                        break;
+                    case 'I':
+                        eC.Add_Element(in.name, out.name, Double.parseDouble(info[3]), 0, "I");
+                        break;
+                    case '*':
+                        //comment
+                        break;
+
+                    default:
+                        System.out.printf("Invalid Syntax : line %d ", cnt);
+                        break;
+                	
+                	}
                     //error invalid value
 
 
                     //error invalid syntax
 
 
-                    //pico micro ...
-
-
-                    switch (lines.get(cnt).charAt(0)) {
-
-                        case 'R':
-                            eC.Add_Element(in.name, out.name, Double.parseDouble(info[3]), 0, "R");
+                    //pico micro ...   
+                }
+                
+                else
+                {
+                	if (lines.get(cnt).charAt(0) == 'd')
+                	{
+                		switch (lines.get(cnt).charAt(1)){
+                        case 't':
+                            dt = Double.parseDouble(info[2]);
+                            checkEnoughVariables++;
                             break;
-                        case 'C':
-                            eC.Add_Element(in.name, out.name, Double.parseDouble(info[3]), 0, "C");
+                        case 'v':
+                            dv = Double.parseDouble(info[2]);
+                            checkEnoughVariables++;
                             break;
-                        case 'L':
-                            eC.Add_Element(in.name, out.name, Double.parseDouble(info[3]), 0, "L");
-                            break;
-                        case 'V':
-                            eC.Add_Element(in.name, out.name, Double.parseDouble(info[3]), 0, "V");
-                            break;
-                        case 'I':
-                            eC.Add_Element(in.name, out.name, Double.parseDouble(info[3]), 0, "I");
-                            break;
-                        case 'd':
-                            switch (lines.get(cnt).charAt(1)){
-                                case 't':
-                                    dt = Double.parseDouble(info[2]);
-                                    checkEnoughVariables++;
-                                    break;
-                                case 'v':
-                                    dv = Double.parseDouble(info[2]);
-                                    checkEnoughVariables++;
-                                    break;
-                                case 'i':
-                                    di = Double.parseDouble(info[2]);
-                                    checkEnoughVariables++;
-                                    break;
-
-                                default:
-                                    System.out.printf("Invalid Syntax : line %d ", cnt);
-                                    break;
-                            }
-
-                        case '*':
-                            //comment
+                        case 'i':
+                            di = Double.parseDouble(info[2]);
+                            checkEnoughVariables++;
                             break;
 
                         default:
                             System.out.printf("Invalid Syntax : line %d ", cnt);
                             break;
-
-                    }
-
-                }
-
-                else
-                    {
+                		}
+                	}
                 	
                         if (checkEnoughVariables == 3){
                             eC.circuit_initialize(dv, dt, di);
                         }
                         
-                	eC.circuit_initialize(dv, dt, di);
                         /*if (1==2) {
                             //error for not initializing dv,dt,di
                             System.out.printf("Not Enough Information!");
@@ -866,7 +892,9 @@ public class EC_Simulator {
             }
             sc.close();
             eC.Init_Circuit();
+    
             eC.Analyse(5);
+   
             eC.Show_Results();
         }
 
