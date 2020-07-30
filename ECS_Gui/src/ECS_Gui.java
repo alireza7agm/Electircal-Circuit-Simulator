@@ -22,7 +22,10 @@ public class ECS_Gui {
     /////////////////////////////////
 
     static Font f1 = new Font(Font.SERIF, Font.BOLD | Font.ITALIC, 30);
+    static Font f3 = new Font(Font.SERIF, Font.BOLD | Font.ITALIC, 100);
     static Font f2 = new Font(Font.SERIF, Font.BOLD | Font.ITALIC, 20);
+    static Font f4 = new Font(Font.SERIF, Font.BOLD | Font.ITALIC, 50);
+
 
     public static class startPage extends JFrame implements ActionListener {
 
@@ -295,9 +298,32 @@ public class ECS_Gui {
 
             this.nodeSet();
 
-            background = new JLabel(new ImageIcon("bgOfRun.jpg"));
+            background = new JLabel(new ImageIcon("bgOfRun3.jpg"));
             background.setPreferredSize(new Dimension(1422, 800));
             add(background);
+
+            JLabel nameLabel = new JLabel();
+            String label = String.format("%s   Circut", input.getName());
+            nameLabel.setHorizontalAlignment(SwingConstants.CENTER);
+            nameLabel.setText(label);
+            nameLabel.setBackground(Color.WHITE);
+            nameLabel.setForeground(Color.BLACK);
+            nameLabel.setOpaque(true);
+            nameLabel.setFont(f4);
+            nameLabel.setBounds(450, 10, 500, 70);
+            background.add(nameLabel);
+
+            //sets the nodes in background
+            for (int i = 0; i < 5; i++){
+                for (int j = i + 1; j < i + 7; j++){
+                    JLabel dot = new JLabel(".");
+                    dot.setBackground(Color.BLACK);
+                    dot.setFont(f3);
+                    dot.setBounds(nodes[5 * i + j].x - 5, nodes[5 * i + j].y - 5, 10, 10);
+                    dot.setOpaque(true);
+                    background.add(dot);
+                }
+            }
 
             //saving each line of the input
             ArrayList<String> lines = new ArrayList<>();
@@ -311,7 +337,7 @@ public class ECS_Gui {
 
                 String[] words = lines.get(i).trim().split("\\s");
 
-                if (words[0].charAt(0) == '*' || lines.get(i).equals(".tran")){
+                if (words[0].charAt(0) == '*' || lines.get(i).trim().equals(".tran")){
                     //siktir
                 }
 
@@ -359,7 +385,6 @@ public class ECS_Gui {
                     nodes[5 * i + j].y = 70 + (5 - i) * 110;
                      */
                     nodes[5 * i + j] = new Point(380 + (j - i - 1) * 110, 70 + (5 - i) * 110);
-                    //g.drawOval(nodes[5 * i + j].x, nodes[5 * i + j].y, 5, 5);
 
                 }
             }
