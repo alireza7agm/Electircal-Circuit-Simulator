@@ -1,3 +1,4 @@
+package helloworld;
 //hi
 
 
@@ -11,7 +12,7 @@ import java.util.ArrayList;
 import java.util.Scanner;
 import java.lang.Math; 
 
-public class EC_Simulator {
+public class HelloWorld {
 //////////////////////////////
     public static class Node{
 
@@ -182,12 +183,11 @@ public class EC_Simulator {
         }
 
 		double return_current(SuperNode superNode, SuperNode superNode2) {
-			// TODO Auto-generated method stub
 			return 0;
 		}
 
-		void update_element(SuperNode superNode, SuperNode superNode2) {
-			// TODO Auto-generated method stub
+		void update(SuperNode superNode, SuperNode superNode2) {
+
 			
 		}
     }
@@ -206,7 +206,8 @@ public class EC_Simulator {
 
         double return_current(SuperNode in, SuperNode out)
         {
-          return this.current = (in.ReturnVoltage(node_1, false) - out.ReturnVoltage(node_2, false))/this.value;
+        	
+          return  (in.ReturnVoltage(node_1, false) - out.ReturnVoltage(node_2, false))/this.value;
         }
 
     }
@@ -386,7 +387,9 @@ public class EC_Simulator {
         double dt;
         double di;
         double sumOfSquares = 0;
-
+        double sumOfSquares_2 = 0;
+        double sumOfSquares_3 = 0;
+        
         public void circuit_initialize(double dv, double dt, double di)
         {
         	this.dt = dt;
@@ -531,17 +534,6 @@ public class EC_Simulator {
               
           }
 
-          for (SuperNode sn: this.super_nodes)
-          {
-        	  System.out.println("size"+sn.nodes.size());
-        	  System.out.println(sn.name);
-          }
-          
-          for (Node n : this.added_nodes)
-          {
-        	  System.out.println("**"+n.union);
-          }
-          
           for ( SuperNode sn : this.super_nodes)
           {
             //update voltages of nodes inside the supernodes just created
@@ -555,6 +547,8 @@ public class EC_Simulator {
           //find supernodes and nodes of elements and add their addresses to the elements for easy access
           for (Element e : this.elements)
           {
+        	  found_in_supernode = false;
+        	  found_out_supernode = false;
             for (int i = 0 ; i<this.super_nodes.size(); i++)
             {
               in_node_address = this.super_nodes.get(i).IsNodeHere(e.in_node_name);
@@ -563,6 +557,7 @@ public class EC_Simulator {
                 e.super_node_1 = i;
                 e.node_1 = in_node_address;
                 found_in_supernode = true;
+             
               }
               
               
@@ -572,6 +567,7 @@ public class EC_Simulator {
                 e.super_node_2 = i;
                 e.node_2 = out_node_address;
                 found_out_supernode = true;
+                
               }
 
               if (found_in_supernode && found_out_supernode)
@@ -666,9 +662,10 @@ public class EC_Simulator {
                 current_1 = 0;
                 current_2 = 0;
                 current_3 = 0;
-                ArrayList<Integer> element_names = new ArrayList<Integer>();
+            	ArrayList<Integer> element_names = new ArrayList<Integer>();
                 for (Node n : sn.nodes)
                 {
+                
                   for (int i =0; i<this.elements.size(); i++)
                   {
                 	  Element e = this.elements.get(i);
@@ -713,41 +710,41 @@ public class EC_Simulator {
 
                 sn.current = current_1;
                 double sum_of_squares_1 = Calculate_Sum_of_Squares();
-
+                this.sumOfSquares = sum_of_squares_1;
                 //if error is small, don't do anything. error is checked here and not in the beginning because we want to find supernodes currents. this is important especially in the beginning of analysis
-                if (sum_of_squares_1 < 0.1)
+                if (sum_of_squares_1 < 0.01)
                 {
+                
                     continue;
                 }
                 
                 sn.current = current_2;
                 double sum_of_squares_2 = Calculate_Sum_of_Squares();
-          
-                if (sum_of_squares_1 > sum_of_squares_2)
+                this.sumOfSquares_2 = sum_of_squares_2;
+                
+                sn.current = current_3;
+                double sum_of_squares_3 = Calculate_Sum_of_Squares();
+                this.sumOfSquares_3 = sum_of_squares_3;
+                
+                if (sum_of_squares_1 < sum_of_squares_2 && sum_of_squares_1 < sum_of_squares_3)
                 {
-                    sn.ModifyVoltage(dv*sum_of_squares_1);
+                	continue;
                 }
-///////////////////////////////////////////////////////////////////////supernode current with -dv
-                else if (sum_of_squares_1 < sum_of_squares_2)
+                
+                else if (sum_of_squares_2 < sum_of_squares_1 && sum_of_squares_2 < sum_of_squares_3)
                 {
-                    if (sum_of_squares_2 < 0.1)
-                    {
-                    	sn.current = current_1;
-                        continue;
-                    }
-
-                    else
-                    {
-                    	sn.current = current_3;
-                        sn.ModifyVoltage(-1*dv*sum_of_squares_2);
-                    }
-
+                	sn.ModifyVoltage(dv*sum_of_squares_1);
+                }
+                
+                else if (sum_of_squares_3 < sum_of_squares_1 && sum_of_squares_3 < sum_of_squares_2)
+                {
+                	sn.ModifyVoltage(-1*dv*sum_of_squares_2);
                 }
 
                 //update the elements using the updated Voltages 
                 for (Integer i : element_names)
                 {
-                    this.elements.get(i).update_element(this.super_nodes.get(this.elements.get(i).super_node_1),
+                    this.elements.get(i).update(this.super_nodes.get(this.elements.get(i).super_node_1),
                     		this.super_nodes.get(this.elements.get(i).super_node_2));
                 }
             }
@@ -756,8 +753,7 @@ public class EC_Simulator {
         
         void Analyse(double t)
         {
-        	int iterations = 50;
-        	System.out.println(t/this.dt);
+        	int iterations = (int) (t/this.dt)+300;
         	for (int i =0; i<iterations; i++)
         	{
         	
@@ -770,12 +766,17 @@ public class EC_Simulator {
         
         void Show_Results()
         {
+        
         	//print node voltages
         	for (Node n : this.nodes)
         	{
         		System.out.println(n.name + "   " + n.union + "   " + n.voltage);
         	}
         	
+        	for (SuperNode sn : this.super_nodes)
+        	{
+        		System.out.println(sn.current);
+        	}
         	for (Element e : this.elements)
         	{
         		if (!e.type.matches("V"))
@@ -784,6 +785,10 @@ public class EC_Simulator {
         					+ e.super_node_2 + "   " + e.current);
         		}
         	}
+        	
+        	System.out.println(this.sumOfSquares);
+        	System.out.println(this.sumOfSquares_2);
+        	System.out.println(this.sumOfSquares_3);
         }
     }
 
