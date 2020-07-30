@@ -286,8 +286,8 @@ public class ECS_Gui {
 
     public static class DrawCircuit extends JFrame {
 
-        Point nodes[] = new Point[31];
-        Ground groundNodes[] = new Ground[6];
+        Point[] nodes = new Point[31];
+        Ground[] groundNodes = new Ground[6];
         JLabel background;
 
         DrawCircuit(File input) throws FileNotFoundException {
@@ -610,7 +610,6 @@ public class ECS_Gui {
             }
 
             else if (positiveNode == 0 || negativeNode == 0){
-                int ground = 0;
                 int nonGround = 0;
 
                 if (positiveNode == 0) {
@@ -726,7 +725,6 @@ public class ECS_Gui {
         }
 
         public void drawGround(){
-            ArrayList<Integer> usedGrounds = new ArrayList<>();
 
             for (int i = 0; i < 6; i++){
                 if (groundNodes[i].used){
@@ -742,10 +740,9 @@ public class ECS_Gui {
 
     }
 
-    public static void main(String[] args) throws FileNotFoundException {
+    public static void main(String[] args){
 
         startPage intro = new startPage();
-        //DrawCircuit dc = new DrawCircuit(new File("C:\\Users\\alire\\Desktop\\input1.txt"));
 
     }
 }
