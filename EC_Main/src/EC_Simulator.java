@@ -410,12 +410,15 @@ public class HelloWorld {
                 {
                   if (!n.added)
                   {
+                    n.added = true;
+                    added_nodes.add(n);
                     if (e.type.matches("V"))
                     {
                       n.union = added_nodes.get(current_node_address).union;
+                      add_neighbor_nodes(added_nodes.size()-1);
                     }
-                    n.added = true;
-                    added_nodes.add(n);
+
+                    
                   }
                 }
                
@@ -432,12 +435,14 @@ public class HelloWorld {
                 {
                   if (!n.added)
                   {
+                	n.added = true;
+                    added_nodes.add(n);
                     if (e.type.matches("V"))
                     {
                       n.union = added_nodes.get(current_node_address).union;
+                      add_neighbor_nodes(added_nodes.size()-1);
                     }
-                    n.added = true;
-                    added_nodes.add(n);
+                   
                   }
                   
                 }
@@ -492,30 +497,37 @@ public class HelloWorld {
             		if (sn.name.matches(n.union))
             		{
             			sn.nodes.add(n);
-            			String super_node_name = sn.name;
                         boolean voltage_source_found = false;
                         for (Element e: this.elements)
                         {
                       	  if (e.type.matches("V"))
                       	  {
-                      		  if (e.in_node_name.matches(super_node_name))
+                      		  for (Node node : sn.nodes)
                       		  {
-                      			  if (e.out_node_name.matches(n.name))
-                      			  {
-                      				  voltage_source_found = true;
-                      				  sn.voltage_sources.add((VoltageSource) e);
-                      			  }
-                      			  
-                      		  }
+                      			if (e.in_node_name.matches(node.name))
+                        		  {
+                        			  if (e.out_node_name.matches(n.name))
+                        			  {
+                        				  voltage_source_found = true;
+                        				  sn.voltage_sources.add((VoltageSource) e);
+                        				  break;
+                        			  }
+                        			  
+                        		  }
+                      			
+                      			
+                      			if (e.out_node_name.matches(node.name))
+	                      		  {
+	                      			  if (e.in_node_name.matches(n.name))
+	                      			  {
+	                      				  voltage_source_found = true;
+	                      				  sn.voltage_sources.add((VoltageSource) e);
+	                      				  break;
+	                      			  }
+	                      		  }
                       		  
-                      		  if (e.out_node_name.matches(super_node_name))
-                      		  {
-                      			  if (e.in_node_name.matches(n.name))
-                      			  {
-                      				  voltage_source_found = true;
-                      				  sn.voltage_sources.add((VoltageSource) e);
-                      			  }
                       		  }
+	                      		  
                       	  }
                         }
                         
