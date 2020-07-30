@@ -298,7 +298,7 @@ public class ECS_Gui {
 
             this.nodeSet();
 
-            background = new JLabel(new ImageIcon("bgOfRun3.jpg"));
+            background = new JLabel(new ImageIcon("bgOfRun.jpg"));
             background.setPreferredSize(new Dimension(1422, 800));
             add(background);
 
@@ -310,6 +310,7 @@ public class ECS_Gui {
             nameLabel.setForeground(Color.BLACK);
             nameLabel.setOpaque(true);
             nameLabel.setFont(f4);
+            nameLabel.setBorder(new LineBorder(Color.BLACK, 4));
             nameLabel.setBounds(450, 10, 500, 70);
             background.add(nameLabel);
 
@@ -613,17 +614,13 @@ public class ECS_Gui {
                 int nonGround = 0;
 
                 if (positiveNode == 0) {
-
-                    ground = positiveNode;
                     nonGround = negativeNode;
-
                 }
+
                 else if (negativeNode == 0){
-
-                    ground = negativeNode;
                     nonGround = positiveNode;
-
                 }
+
                 groundNodes[nonGround - 1].setUsed();
 
 
@@ -733,15 +730,12 @@ public class ECS_Gui {
 
             for (int i = 0; i < 6; i++){
                 if (groundNodes[i].used){
-                    usedGrounds.add(i);
+                    JLabel gnd = new JLabel(new ImageIcon("gnd.png"));
+                    gnd.setPreferredSize(new Dimension(50, 20));
+                    gnd.setBounds(groundNodes[i].x - 27, groundNodes[i].y - 2, 50, 20);
+                    background.add(gnd);
                 }
             }
-
-            JLabel gnd = new JLabel("GND");
-            gnd.setBounds(groundNodes[0].x - 15, groundNodes[0].y + 15, 20, 20);
-            gnd.setFont(f1);
-            background.add(gnd);
-
 
         }
 
