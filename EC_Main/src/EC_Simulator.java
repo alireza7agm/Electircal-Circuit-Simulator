@@ -18,6 +18,8 @@ public class HelloWorld {
 
         double previous_voltage = 0;
         double voltage = 0;
+        
+        double double_previous_voltage = 0;
         String name;
         String union;
         ArrayList <String> connected_nodes_list;
@@ -36,13 +38,14 @@ public class HelloWorld {
 
     public static class SuperNode
     {
+    	
         ArrayList<Node> nodes;
         ArrayList<VoltageSource> voltage_sources;
         double base_voltage;
         String name;
         double current = 0;
         double previous_current = 0;
-
+        
         SuperNode(Node base_node)
         {
           nodes = new ArrayList<Node>();
@@ -78,88 +81,18 @@ public class HelloWorld {
             return -1;
         }
 
-        void ModifyVoltage(double dv)
+        void UndoLastChange()
         {
         	for (Node n : this.nodes)
         	{
-        		n.voltage += dv;
+        		n.voltage = n.previous_voltage;
+        		n.previous_voltage = n.double_previous_voltage;
+        		
         	}
-          
         }
+
         
-        void InitSuperNode()
-        {
-        	ArrayList <Node> initiated = new ArrayList<Node> ();
-            initiated.add(this.nodes.get(0));
-            int counter = 0;
-            while (initiated.size()<this.nodes.size() || counter<initiated.size())
-            {
-              Node current_node = initiated.get(counter);
-              //find nodes connected to current_node
-              for (VoltageSource v : this.voltage_sources)
-              {
-                if (v.out_node_name.matches(current_node.name))
-                {
-                  //if the connected node has not been updated
-                  boolean node_modified = false;
-                  for (Node n : initiated)
-                  {
-                    if (n.name.matches(v.in_node_name))
-                    {
-                      node_modified = true;
-                    } 
-                  }
-
-                  if (!node_modified)
-                  {
-                    //find node and modify voltage
-                    for (Node n : this.nodes)
-                    {
-                      if (n.name.matches(v.in_node_name))
-                      {
-                        n.previous_voltage = n.voltage;
-                        n.voltage = current_node.voltage - v.ReturnVoltage();
-                        initiated.add(n);
-                        break;
-                      }
-                    }
-                  }
-
-                }
-
-                if (v.in_node_name.matches(current_node.name))
-                {
-                  //if the connected node has not been updated
-                  boolean node_modified = false;
-                  for (Node n : initiated)
-                  {
-                    if (n.name.matches(v.out_node_name))
-                    {
-                      node_modified = true;
-                    } 
-                  }
-
-                  if (!node_modified)
-                  {
-                    //find node and modify voltage
-                    for (Node n : this.nodes)
-                    {
-                      if (n.name.matches(v.out_node_name))
-                      {
-                        n.previous_voltage = n.voltage;
-                        n.voltage = current_node.voltage + v.ReturnVoltage();
-                        initiated.add(n);
-                        break;
-                      }
-                    }
-                  }
-                }
-              }
-
-              counter++;
-            }
-
-        }
+        
     }
 
 
@@ -176,13 +109,15 @@ public class HelloWorld {
         int node_2;
         //in and out supernodes address in the supernodes list of the circuit
         String type;
+        String name;
         /////////////////other variables
         boolean added = false;
         
         
         //constructor :
-        public Element(String in_node_name, String out_node_name, double value, String type) {
-            this.in_node_name = in_node_name;
+        public Element(String name ,String in_node_name, String out_node_name, double value, String type) {
+            this.name = name;
+        	this.in_node_name = in_node_name;
             this.out_node_name = out_node_name;
             this.voltage = 0;
             this.previous_current = 0;
@@ -204,8 +139,8 @@ public class HelloWorld {
 
     public static class Resistor extends Element{
 
-        public Resistor(String in, String out, double value, String type) {
-            super(in, out, value, type);
+        public Resistor(String name, String in, String out, double value, String type) {
+            super(name, in, out, value, type);
         }
 
         void update(SuperNode in, SuperNode out)
@@ -225,8 +160,10 @@ public class HelloWorld {
     public static class Capacitor extends Element{
 
 
-        public Capacitor(String in, String out, double value, String type) {
-            super(in, out, value, type);
+    	double initial_condition = 0;
+        public Capacitor(String name, String in, String out, double value, double initial_condition, String type) {
+            super(name, in, out, value, type);
+            this.initial_condition = initial_condition;
 
         }
 
@@ -249,8 +186,8 @@ public class HelloWorld {
 
 
         double initial_current;
-        public Inductor(String in, String out, double value, double initial_current, String type) {
-            super(in, out, value, type);
+        public Inductor(String name, String in, String out, double value, double initial_current, String type) {
+            super(name, in, out, value, type);
             this.initial_current = initial_current;
             this.current = initial_current;
         }
@@ -273,19 +210,19 @@ public class HelloWorld {
     public static class VoltageSource extends Element{
 
 //i is independant
-        char dependancy;
-        String dependant_node_1;
-        String dependant_node_2;
+        char dependancy = 'i';
+        Node dependant_node_1;
+        Node dependant_node_2;
         String dependant_element;
         double amplitude = 0;
         double frequency = 0;
         double phase = 0;
-        public VoltageSource(String in, String out, double value, String type) {
-            super(in, out, value, type);
+        public VoltageSource (String name, String in, String out, double value, String type) {
+            super(name, in, out, value, type);
             dependancy = 'i';
         }
-        public VoltageSource(String in, String out, double value, double amplitude, double frequency, double phase, String type) {
-            super(in, out, value, type);
+        public VoltageSource (String name, String in, String out, double value, double amplitude, double frequency, double phase, String type) {
+            super(name, in, out, value, type);
             dependancy = 'i';
             this.frequency = frequency; 
             this.phase = phase;
@@ -293,18 +230,18 @@ public class HelloWorld {
         }
 
 ///voltage dependant voltage source
-        public VoltageSource(String in, String out, String dependant_node_1, String dependant_node_2, double amplitude)
+        public VoltageSource (String name, String in, String out, Node dependant_node_1, Node dependant_node_2, double amplitude)
         {
-          super(in, out, amplitude, "V");
+          super(name, in, out, amplitude, "V");
         		  
           dependancy = 'e';
           this.dependant_node_1 = dependant_node_1;
           this.dependant_node_2 = dependant_node_2;
         }
 //current dependant voltage source
-        public VoltageSource(String in, String out, String dependant_element , double amplitude)
+        public VoltageSource (String name, String in, String out, String dependant_element , double amplitude)
         {
-        	super(in, out, amplitude, "V");
+        	super(name, in, out, amplitude, "V");
           dependancy = 'h';
           this.dependant_element = dependant_element;
         }
@@ -316,15 +253,23 @@ public class HelloWorld {
               {
                 this.voltage = this.value + amplitude*Math.sin(Circuit.time*2*Math.PI*frequency + phase);
               }
-/*
-    
+
+              if (dependancy == 'e')
+              {
+            	  this.voltage = this.amplitude*(dependant_node_1.voltage - this.dependant_node_2.voltage);
+              }
+              /*
               else if (dependancy == 'g')
               {
                 return this.amplitude * (dependant_node_1 - )
               }            
-
 */
-            
+         
+        }
+        
+        void update(Element e)
+        {
+        	this.voltage = this.amplitude * (e.current);
         }
 
         double ReturnVoltage()
@@ -334,21 +279,17 @@ public class HelloWorld {
             return this.value + amplitude*Math.sin(Circuit.time*2*Math.PI*frequency + phase);
           }
 
-/*
-          else if (dependancy == 'g')
+          if (dependancy == 'e')
           {
-            return this.amplitude * (dependant_node_1 - )
-          }            
-
-
-
-
-
-
-
-
-
-*/			return 0;
+        	  return this.amplitude*(dependant_node_1.voltage - this.dependant_node_2.voltage);
+          }          
+          
+          return 0;
+        }
+        
+        double ReturnVoltage(Element e)
+        {
+        	return this.amplitude * e.current;
         }
 
     }
@@ -356,26 +297,36 @@ public class HelloWorld {
 
     public static class CurrentSource extends Element{
 
-        char dependancy;
-        String dependant_node_1;
-        String dependant_node_2;
+        char dependancy = 'i';
+        Node dependant_node_1;
+        Node dependant_node_2;
         String dependant_element;
         double frequency = 0;
         double phase = 0;
         double amplitude = 0;
-        public CurrentSource(String in, String out, double value, String type) {
-            super(in, out, value, type);
+        public CurrentSource (String name, String in, String out, double value, String type) {
+            super (name, in, out, value, type);
             this.current = value;
         }
 
         void update(SuperNode in, SuperNode out)
         {
-          this.current = this.value + amplitude*Math.sin(Circuit.time*2*Math.PI*frequency + phase); ;
+        	if (this.dependancy == 'i')
+        	{
+                this.current = this.value + amplitude*Math.sin(Circuit.time*2*Math.PI*frequency + phase); 
+        	}
+        	
+
         }
         
-        double return_current(SuperNode in, SuperNode out)
+        double return_current()
         {
           return this.value + amplitude*Math.sin(Circuit.time*2*Math.PI*frequency + phase); 
+        }
+        
+        double return_current(Element e)
+        {
+        	return this.amplitude * e.current;
         }
 
     }
@@ -401,6 +352,133 @@ public class HelloWorld {
         	Circuit.dt = dt;
             this.dv = dv;
             this.di = di;
+        }
+        
+        //modifies voltage of the supernode sn by dv
+        void ModifyVoltage(SuperNode sn, double dv)
+        {
+        	ArrayList <Node> modified = new ArrayList<Node> ();
+            sn.nodes.get(0).double_previous_voltage = sn.nodes.get(0).previous_voltage;
+            sn.nodes.get(0).previous_voltage = sn.nodes.get(0).voltage;
+            sn.nodes.get(0).voltage += dv;
+        	modified.add(sn.nodes.get(0));
+            int counter = 0;
+            while (modified.size()<sn.nodes.size() || counter<modified.size())
+            {
+              Node current_node = modified.get(counter);
+              //find nodes connected to current_node
+              for (VoltageSource v : sn.voltage_sources)
+              {
+                if (v.out_node_name.matches(current_node.name))
+                {
+                  //if the connected node has not been updated
+                  boolean node_modified = false;
+                  for (Node n : modified)
+                  {
+                    if (n.name.matches(v.in_node_name))
+                    {
+                      node_modified = true;
+                    } 
+                  }
+
+                  if (!node_modified)
+                  {
+                    //find node and modify voltage
+                    for (Node n : sn.nodes)
+                    {
+                      if (n.name.matches(v.in_node_name))
+                      {
+                    	n.double_previous_voltage = n.previous_voltage;
+                    	n.previous_voltage = n.voltage;
+                        double voltage_difference = 0;
+                        if (v.dependancy == 'i')
+                        {
+                        		voltage_difference = v.ReturnVoltage();
+                        }
+                        else if (v.dependancy == 'e')
+                        {
+                        		voltage_difference = v.ReturnVoltage();
+                        }
+                        	
+                        else if (v.dependancy == 'h')
+                        {
+                        	for (Element e : this.elements)
+                        	{
+                        		if (e.name.matches(v.dependant_element))
+                        		{
+                        			voltage_difference = v.ReturnVoltage(e);
+                        		}
+                        	}
+                        		
+                       	}
+                       	n.voltage = current_node.voltage - voltage_difference;
+                       }
+                       
+                   
+                        modified.add(n);
+                        break;
+                      }
+                    
+                  }
+
+                }
+                
+                if (v.in_node_name.matches(current_node.name))
+                {
+                  //if the connected node has not been updated
+                  boolean node_modified = false;
+                  for (Node n : modified)
+                  {
+                    if (n.name.matches(v.out_node_name))
+                    {
+                      node_modified = true;
+                    } 
+                  }
+
+                  if (!node_modified)
+                  {
+                    //find node and modify voltage
+                    for (Node n : sn.nodes)
+                    {
+                      if (n.name.matches(v.out_node_name))
+                      {
+                    	n.double_previous_voltage = n.previous_voltage;
+                        n.previous_voltage = n.voltage;
+                
+                        	double voltage_difference = 0;
+                        	if (v.dependancy == 'i')
+                        	{
+                        		voltage_difference = v.ReturnVoltage();
+                        	}
+                        	else if (v.dependancy == 'e')
+                        	{
+                        		voltage_difference = v.ReturnVoltage();
+                        	}
+                        	
+                        	else if (v.dependancy == 'h')
+                        	{
+                        		for (Element e : this.elements)
+                        		{
+                        			if (e.name.matches(v.dependant_element))
+                        			{
+                        				voltage_difference = v.ReturnVoltage(e);
+                        			}
+                        		}
+                        		
+                        	}
+                        	n.voltage = current_node.voltage + voltage_difference;
+                        
+                        modified.add(n);
+                        break;
+                      }
+                    }
+                  }
+                }
+              }
+
+              counter++;
+            }
+
         }
 
         void add_neighbor_nodes(int current_node_address)
@@ -565,12 +643,8 @@ public class HelloWorld {
           for ( SuperNode sn : this.super_nodes)
           {
             //update voltages of nodes inside the supernodes just created
-            sn.InitSuperNode();
+            ModifyVoltage(sn, 0);
 
-            for (Node n : this.nodes)
-            {
-            	System.out.println("("+n.voltage);
-            }
           }
 
           boolean found_in_supernode = false;
@@ -632,29 +706,10 @@ public class HelloWorld {
             return;
         }
 
-        public void Add_Element(String in, String out, double value, double initialCondition, String type)
+        public void Add_Element(String name, String in, String out, double value, double initialCondition, String type)
         {
             switch (type){
-                case "R":
-                    Resistor R = new Resistor(in, out, value, type);
-                    elements.add(R);
-                    break;
-                case "C":
-                    Capacitor C = new Capacitor(in, out, value, type);
-                    elements.add(C);
-                    break;
-                case "L":
-                    Inductor L = new Inductor(in, out, value, initialCondition, type);
-                    elements.add(L);
-                    break;
-                case "V":
-                    VoltageSource V = new VoltageSource(in, out, value, type);
-                    elements.add(V);
-                    break;
-                case "I":
-                    CurrentSource I = new CurrentSource(in, out, value, type);
-                    elements.add(I);
-                    break;
+
             }
             return;
         }
@@ -728,29 +783,119 @@ public class HelloWorld {
                       //save the names of the elements connected to the supernode we're updating. 
                       //the connected elements will be updated after supernode is updated
                       element_names.add(i);
-                      current_1 -= e.return_current(this.super_nodes.get(e.super_node_1), this.super_nodes.get(e.super_node_2));
-                      sn.ModifyVoltage(dv);
-                      current_2 -= e.return_current(this.super_nodes.get(e.super_node_1), this.super_nodes.get(e.super_node_2));
-                      //undo voltage changes
-                      sn.ModifyVoltage(dv*-1);
-                      sn.ModifyVoltage(dv*-1);
-                      current_3 -= e.return_current(this.super_nodes.get(e.super_node_1), this.super_nodes.get(e.super_node_2));
-                      //undo changes again
-                      sn.ModifyVoltage(dv);
+                      if (e.type.matches("I"))
+                      {
+                    	 CurrentSource cs = (CurrentSource) e;
+                    	 if (cs.dependancy == 'f')
+                    	 {
+                    		 for (Element element : this.elements)
+                    		 {
+                    			 if (element.name.matches(cs.dependant_element))
+                    			 {
+                    				 current_1 -= cs.return_current(element);
+                    				 ModifyVoltage(sn, dv);
+                                     current_2 -= cs.return_current(element);
+                                     //undo voltage changes
+                                     sn.UndoLastChange();
+                                     ModifyVoltage(sn, dv*-1);
+                                     current_3 -= cs.return_current(element);
+                                     //undo changes again
+                                     sn.UndoLastChange();
+                    			 }
+                    		 }
+                    		 
+                    	 }
+                    	 
+                    	 else if (cs.dependancy == 'i')
+                    	 {
+                    		 current_1 -= cs.return_current();
+            				 ModifyVoltage(sn, dv);
+                             current_2 -= cs.return_current();
+                             //undo voltage changes
+                             sn.UndoLastChange();
+                             ModifyVoltage(sn, dv*-1);
+                             current_3 -= cs.return_current();
+                             //undo changes again
+                             sn.UndoLastChange();
+                    	 }
+                    	 
+                    	 ////////////////////////////gg//////////////////////////////////////////
+                    	 
+                      }
+                      
+                      else
+                      {
+                    	  current_1 -= e.return_current(this.super_nodes.get(e.super_node_1), this.super_nodes.get(e.super_node_2));
+                    	  ModifyVoltage(sn, dv);
+                          current_2 -= e.return_current(this.super_nodes.get(e.super_node_1), this.super_nodes.get(e.super_node_2));
+                          //undo voltage changes
+                          sn.UndoLastChange();
+                          ModifyVoltage(sn, dv*-1);
+                          current_3 -= e.return_current(this.super_nodes.get(e.super_node_1), this.super_nodes.get(e.super_node_2));
+                          //undo changes again
+                          sn.UndoLastChange();
+                      }
+                      
+                      
                     } 
 
                     if (e.out_node_name.matches(n.name))
                     { 
-                      element_names.add(i);
-                      current_1 += e.return_current(this.super_nodes.get(e.super_node_1), this.super_nodes.get(e.super_node_2));
-                      sn.ModifyVoltage(dv);
-                      current_2 += e.return_current(this.super_nodes.get(e.super_node_1), this.super_nodes.get(e.super_node_2));
-                      //undo voltage changes
-                      sn.ModifyVoltage(dv*-1);
-                      sn.ModifyVoltage(dv*-1);
-                      current_3 += e.return_current(this.super_nodes.get(e.super_node_1), this.super_nodes.get(e.super_node_2));
-                      //undo changes again
-                      sn.ModifyVoltage(dv);
+                    	if (e.type.matches("I"))
+                        {
+	                      	 CurrentSource cs = (CurrentSource) e;
+	                      	 if (cs.dependancy == 'f')
+	                      	 {
+	                      		 for (Element element : this.elements)
+	                      		 {
+	                      			 if (element.name.matches(cs.dependant_element))
+	                      			 {
+	                      				 current_1 += cs.return_current(element);
+	                      				 ModifyVoltage(sn, dv);
+	                                       current_2 += cs.return_current(element);
+	                                       //undo voltage changes
+	                                       sn.UndoLastChange();
+	                                       ModifyVoltage(sn, dv*-1);
+	                                       current_3 += cs.return_current(element);
+	                                       //undo changes again
+	                                       sn.UndoLastChange();
+	                      			 }
+	                      		 }
+	                      		 
+	                      	 }
+	                      	 
+	                      	 else if (cs.dependancy == 'i')
+	                      	 {
+	                      		 current_1 += cs.return_current();
+	              				 ModifyVoltage(sn, dv);
+	                               current_2 += cs.return_current();
+	                               //undo voltage changes
+	                               sn.UndoLastChange();
+	                               ModifyVoltage(sn, dv*-1);
+	                               current_3 += cs.return_current();
+	                               //undo changes again
+	                               sn.UndoLastChange();
+	                      	 }
+	                      	 
+	                 ///////////////////////////////////     	 ////////////////////////////gggg
+	                 
+	                      	 
+                        }
+                    	
+                    	else
+                    	{
+                    		 element_names.add(i);
+                             current_1 += e.return_current(this.super_nodes.get(e.super_node_1), this.super_nodes.get(e.super_node_2));
+                             ModifyVoltage(sn, dv);
+                             current_2 += e.return_current(this.super_nodes.get(e.super_node_1), this.super_nodes.get(e.super_node_2));
+                             //undo voltage changes
+                             sn.UndoLastChange();
+                             ModifyVoltage(sn, dv*-1);
+                             current_3 += e.return_current(this.super_nodes.get(e.super_node_1), this.super_nodes.get(e.super_node_2));
+                             //undo changes again
+                             sn.UndoLastChange();
+                    	}
+                     
                     }
 
                   }
@@ -781,12 +926,12 @@ public class HelloWorld {
                 
                 else if (sum_of_squares_2 < sum_of_squares_1 && sum_of_squares_2 < sum_of_squares_3)
                 {
-                	sn.ModifyVoltage(dv*sum_of_squares_1);
+                	ModifyVoltage(sn, dv*sum_of_squares_1);
                 }
                 
                 else if (sum_of_squares_3 < sum_of_squares_1 && sum_of_squares_3 < sum_of_squares_2)
                 {
-                	sn.ModifyVoltage(-1*dv*sum_of_squares_2);
+                	ModifyVoltage(sn, -1*dv*sum_of_squares_1);
                 }
 
                 //update the elements using the updated Voltages 
@@ -799,15 +944,15 @@ public class HelloWorld {
 
         }
         
-        void Analyse(double t)
+        void Analyze(double t)
         {
-        	int iterations = (int) (t/this.dt)-49;
+        	int iterations = 1;
         	for (int i =0; i<iterations; i++)
         	{
-        	
+
         		this.Update_Nodes();
         		time += dt;
-        		
+
         	}
             
         }
@@ -829,7 +974,7 @@ public class HelloWorld {
         	{
         		if (!e.type.matches("V"))
         		{
-        			System.out.println(e.node_1 + "   " + e.node_2 + "   " + e.super_node_1 + "   "
+        			System.out.println(e.type + "   "+ e.node_1 + "   " + e.node_2 + "   " + e.super_node_1 + "   "
         					+ e.super_node_2 + "   " + e.current);
         		}
         	}
@@ -859,7 +1004,7 @@ public class HelloWorld {
                 String info[] = lines.get(cnt).split("\\s");
 
                 if (!lines.get(cnt).substring(0, 5).equals(".tran") && lines.get(cnt).charAt(0) != 'd') {
-                
+                	
                     Node in = new Node(info[1]);
                     eC.Add_Node(info[1]);
                     Node out = new Node(info[2]);
@@ -868,20 +1013,35 @@ public class HelloWorld {
                 	switch (lines.get(cnt).charAt(0)) {
 
                     case 'R':
-                        eC.Add_Element(in.name, out.name, Double.parseDouble(info[3]), 0, "R");
+                        Resistor R = new Resistor(info[0], in.name, out.name, Double.parseDouble(info[3]),  "R");
+                        eC.add(R);
                         break;
                     case 'C':
-                        eC.Add_Element(in.name, out.name, Double.parseDouble(info[3]), 0, "C");
+                        Capacitor C = new Capacitor(info[0], in.name, out.name, Double.parseDouble(info[3]), 0, "C");
+                        eC.add(C);
                         break;
                     case 'L':
-                        eC.Add_Element(in.name, out.name, Double.parseDouble(info[3]), 0, "L");
+                        Inductor L = new Inductor(info[0], in.name, out.name, Double.parseDouble(info[3]), 0, "L");
+                        eC.add(L);
                         break;
                     case 'V':
-                        eC.Add_Element(in.name, out.name, Double.parseDouble(info[3]), 0, "V");
+                    	//if its an ac voltage source
+                    	if (info.length == 7)
+                    	{
+                    		VoltageSource V = new VoltageSource(info[0], in.name, out.name, Double.parseDouble(info[3]), );
+                    	}
+                    	else
+                    	{
+                    		 VoltageSource V = new VoltageSource(info[0], in.name, out.name, Double.parseDouble(info[3]),  "V");
+                    	}
+                       
+                        eC.add(V);
                         break;
                     case 'I':
-                        eC.Add_Element(in.name, out.name, Double.parseDouble(info[3]), 0, "I");
+                        CurrentSource I = new CurrentSource(info[0], in.name, out.name, Double.parseDouble(info[3]), "I");
+                        eC.add(I);
                         break;
+                        
                     case '*':
                         //comment
                         break;
@@ -946,7 +1106,7 @@ public class HelloWorld {
             sc.close();
             eC.Init_Circuit();
     
-            eC.Analyse(5);
+            eC.Analyze(5);
    
             eC.Show_Results();
         }
