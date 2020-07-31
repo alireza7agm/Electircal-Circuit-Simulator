@@ -344,11 +344,8 @@ public class ECS_Gui {
 
                 else {
 
-                    if (words.length == 4) {
-                        this.drawBranch(Integer.parseInt(words[1]), Integer.parseInt(words[2]),
-                                Character.toUpperCase(words[0].charAt(0)), ' ');
-                    }
-                    else if (words.length == 7) {
+                    //ac/dc sources
+                    if (words.length == 7) {
 
                         if (Integer.parseInt(words[5]) == 0) {
                             this.drawBranch(Integer.parseInt(words[1]), Integer.parseInt(words[2]),
@@ -358,6 +355,11 @@ public class ECS_Gui {
                             this.drawBranch(Integer.parseInt(words[1]), Integer.parseInt(words[2]),
                                     Character.toUpperCase(words[0].charAt(0)), 'A');
                         }
+                    }
+                    //other elements
+                    else {
+                        this.drawBranch(Integer.parseInt(words[1]), Integer.parseInt(words[2]),
+                                Character.toUpperCase(words[0].charAt(0)), ' ');
                     }
 
                 }
@@ -404,7 +406,6 @@ public class ECS_Gui {
                 if (Math.abs(positiveNode - negativeNode) == 1) {
 
                     int leftOne = Math.min(positiveNode, negativeNode);
-                    int rightOne = Math.max(positiveNode, negativeNode);
 
                     //element
                     switch (type) {
@@ -495,6 +496,31 @@ public class ECS_Gui {
 
                             break;
 
+                        case 'H': case 'E':
+                            if (positiveNode - negativeNode > 0){
+                                element = new JLabel(new ImageIcon("DvR.png"));
+
+                            }
+                            else if (positiveNode - negativeNode < 0){
+                                element = new JLabel(new ImageIcon("DvL.png"));
+                            }
+                            element.setPreferredSize(new Dimension(110, 80));
+                            element.setBounds(nodes[leftOne].x, nodes[leftOne].y - 40, 110, 80);
+                            break;
+
+                        case 'G': case 'F':
+                            if (positiveNode - negativeNode > 0){
+                                element = new JLabel(new ImageIcon("DiR.png"));
+
+                            }
+                            else if (positiveNode - negativeNode < 0){
+                                element = new JLabel(new ImageIcon("DiL.png"));
+                            }
+                            element.setPreferredSize(new Dimension(110, 79));
+                            element.setBounds(nodes[leftOne].x, nodes[leftOne].y - 40, 110, 79);
+                            break;
+
+
                         default:
                             //
                             break;
@@ -507,9 +533,7 @@ public class ECS_Gui {
                 //Vertical Mode
                 else if (Math.abs(positiveNode - negativeNode) == 6) {
 
-                    int downOne = Math.min(positiveNode, negativeNode);
                     int upOne = Math.max(positiveNode, negativeNode);
-
 
                     //element
                     switch (type) {
@@ -597,6 +621,29 @@ public class ECS_Gui {
                                 }
                             }
                             break;
+
+                        case 'H': case 'E':
+                            if (positiveNode - negativeNode > 0){
+                                element = new JLabel(new ImageIcon("DvU.png"));
+                            }
+                            else if (positiveNode - negativeNode < 0){
+                                element = new JLabel(new ImageIcon("DvD.png"));
+                            }
+                            element.setPreferredSize(new Dimension(80, 110));
+                            element.setBounds(nodes[upOne].x - 40, nodes[upOne].y, 80, 110);
+                            break;
+
+                        case 'F': case 'G':
+                            if (positiveNode - negativeNode > 0){
+                                element = new JLabel(new ImageIcon("DiU.png"));
+                            }
+                            else if (positiveNode - negativeNode < 0){
+                                element = new JLabel(new ImageIcon("DiD.png"));
+                            }
+                            element.setPreferredSize(new Dimension(79, 110));
+                            element.setBounds(nodes[upOne].x - 40, nodes[upOne].y, 79, 110);
+                            break;
+
 
                         default:
                             //
@@ -743,6 +790,16 @@ public class ECS_Gui {
     public static void main(String[] args){
 
         startPage intro = new startPage();
+        /*File f = new File("C:\\Users\\alire\\Desktop\\input1.txt");
+        try {
+            Scanner sc = new Scanner(f);
+            while (sc.hasNextLine()){
+                System.out.println(sc.nextLine());
+            }
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }*/
+
 
     }
 }
