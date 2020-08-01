@@ -304,7 +304,7 @@ public class HelloWorld {
         double phase = 0;
         double amplitude = 0;
         public CurrentSource (String name, String in, String out, double value, double amplitude, double frequency, double phase) {
-            super(name, in, out, value, "V");
+            super(name, in, out, value, "I");
             dependency = 'i';
             this.frequency = frequency; 
             this.phase = phase;
@@ -314,7 +314,7 @@ public class HelloWorld {
 ///voltage dependent voltage source
         public CurrentSource (String name, String in, String out, String dependent_node_1, String dependent_node_2, double amplitude)
         {
-          super(name, in, out, amplitude, "V");
+          super(name, in, out, amplitude, "I");
         		  
           dependency = 'e';
           this.dependent_node_1 = dependent_node_1;
@@ -323,7 +323,7 @@ public class HelloWorld {
 //current dependent voltage source
         public CurrentSource (String name, String in, String out, String dependent_element , double amplitude)
         {
-        	super(name, in, out, amplitude, "V");
+        	super(name, in, out, amplitude, "I");
           dependency = 'h';
           this.dependent_element = dependent_element;
         }
@@ -1114,7 +1114,7 @@ public class HelloWorld {
         
         void Analyze(double t)
         {
-        	int iterations = 1;
+        	int iterations = 1000;
         	for (int i =0; i<iterations; i++)
         	{
 
@@ -1209,9 +1209,12 @@ public class HelloWorld {
                     		 eC.Add_Element((Element) V);
                     	}
                     	
+                    	//if it's a voltage dependent voltage source
                     	else if (info.length == 6)
                     	{
-                    		
+                    		VoltageSource V = new VoltageSource(info[0], in.name, out.name,  info[3],
+                     				Double.parseDouble(info[4]));
+                    		 eC.Add_Element((Element) V);
                     	}
                        
                     	else
@@ -1221,8 +1224,35 @@ public class HelloWorld {
                         
                         break;
                     case 'I':
-                        CurrentSource I = new CurrentSource(info[0], in.name, out.name, Double.parseDouble(info[3]));
-                        eC.Add_Element((Element) I);
+                    	//if it's an independent current source
+                    	if (info.length == 7)
+                    	{
+                    		CurrentSource I = new CurrentSource(info[0], in.name, out.name, Double.parseDouble(info[3])
+	                        		, Double.parseDouble(info[4]), Double.parseDouble(info[5]), Double.parseDouble(info[6]));
+	                        eC.Add_Element((Element) I);
+                    	}
+	                        
+                       	//if its a current dependent current source
+                    	else if (info.length == 5)
+                    	{
+                    		 CurrentSource I = new CurrentSource(info[0], in.name, out.name,  info[3],
+                     				Double.parseDouble(info[4]));
+                    		 eC.Add_Element((Element) I);
+                    	}
+                    	
+                    	//if it's a voltage dependent current source
+                    	else if (info.length == 6)
+                    	{
+                    		CurrentSource I = new CurrentSource(info[0], in.name, out.name,  info[3],
+                     				Double.parseDouble(info[4]));
+                    		 eC.Add_Element((Element) I);
+                    	}
+                       
+                    	else
+                    	{
+                    		System.out.println("Incorrect Current Source Information Format");
+                    	}
+                        
                         break;
                         
                     case '*':
