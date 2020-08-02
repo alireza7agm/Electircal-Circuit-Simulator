@@ -38,12 +38,12 @@ public class ECS_Gui {
             setDefaultCloseOperation(EXIT_ON_CLOSE);
 
             //background
-            JLabel background = new JLabel(new ImageIcon("C:\\Users\\alire\\Desktop\\1.jpg"));
+            JLabel background = new JLabel(new ImageIcon("bgOfStart.jpg"));
             background.setPreferredSize(new Dimension(1422, 800));
             add(background);
 
             //Open file button
-            openFile = new JButton(new ImageIcon("C:\\Users\\alire\\Desktop\\openimage2.png"));
+            openFile = new JButton(new ImageIcon("openimage2.png"));
             openFile.setBounds(1140, 35, 150, 150);
             openFile.setContentAreaFilled(false);
             openFile.setOpaque(false);
@@ -51,7 +51,7 @@ public class ECS_Gui {
             openFile.addActionListener(this);
 
             //Instructions Button
-            instructionsButton = new JButton(new ImageIcon("C:\\Users\\alire\\Desktop\\info2.png"));
+            instructionsButton = new JButton(new ImageIcon("info2.png"));
             instructionsButton.setBounds(1140, 310, 150, 150);
             instructionsButton.setOpaque(false);
             instructionsButton.setContentAreaFilled(false);
@@ -59,7 +59,7 @@ public class ECS_Gui {
 
 
             //About us button
-            aboutButton = new JButton(new ImageIcon("C:\\Users\\alire\\Desktop\\about.png"));
+            aboutButton = new JButton(new ImageIcon("about.png"));
             aboutButton.setBounds(1140, 570, 150, 150);
             aboutButton.setOpaque(false);
             aboutButton.setContentAreaFilled(false);
@@ -134,7 +134,7 @@ public class ECS_Gui {
             setDefaultCloseOperation(EXIT_ON_CLOSE);
 
             //background
-            JLabel background = new JLabel(new ImageIcon("C:\\Users\\alire\\Desktop\\main6.jpg"));
+            JLabel background = new JLabel(new ImageIcon("main6.jpg"));
             background.setPreferredSize(new Dimension(1422, 800));
             add(background);
 
