@@ -897,6 +897,71 @@ public class ECS_Gui {
                                 element.setPreferredSize(new Dimension(110, 32));
                                 element.setBounds(nodes[leftOne].x, nodes[leftOne].y - 32, 110, 32);
                                 break;
+
+                            case 'V':
+
+                                switch (AcDc) {
+
+                                    case 'D':
+                                        if (leftOne == negativeNode) {
+                                            element = new JLabel(new ImageIcon("vxUR.png"));
+                                        } else {
+                                            element = new JLabel(new ImageIcon("vxUL.png"));
+                                        }
+                                        element.setPreferredSize(new Dimension(110, 68));
+                                        element.setBounds(nodes[leftOne].x, nodes[leftOne].y - 68, 110, 68);
+                                        break;
+
+                                    case 'A':
+                                        element = new JLabel(new ImageIcon("acxU.png"));
+                                        element.setPreferredSize(new Dimension(110, 65));
+                                        element.setBounds(nodes[leftOne].x, nodes[leftOne].y - 65, 110, 65);
+                                        break;
+                                }
+                                break;
+
+                            case 'I':
+                                switch (AcDc) {
+
+                                    case 'D':
+                                        if (leftOne == negativeNode) {
+                                            element = new JLabel(new ImageIcon("ixUR.png"));
+                                        } else {
+                                            element = new JLabel(new ImageIcon("ixUL.png"));
+                                        }
+                                        element.setPreferredSize(new Dimension(110, 67));
+                                        element.setBounds(nodes[leftOne].x, nodes[leftOne].y - 67, 110, 67);
+                                        break;
+
+                                    case 'A':
+                                        element = new JLabel(new ImageIcon("acxU.png"));
+                                        element.setPreferredSize(new Dimension(110, 65));
+                                        element.setBounds(nodes[leftOne].x, nodes[leftOne].y - 65, 110, 65);
+                                        break;
+                                }
+                                break;
+
+                            case 'E':
+                            case 'H':
+                                if (leftOne == negativeNode) {
+                                    element = new JLabel(new ImageIcon("DvxUR.png"));
+                                } else {
+                                    element = new JLabel(new ImageIcon("DvxUL.png"));
+                                }
+                                element.setPreferredSize(new Dimension(110, 70));
+                                element.setBounds(nodes[leftOne].x, nodes[leftOne].y - 70, 110, 70);
+                                break;
+
+                            case 'F':
+                            case 'G':
+                                if (leftOne == negativeNode) {
+                                    element = new JLabel(new ImageIcon("DixUR.png"));
+                                } else {
+                                    element = new JLabel(new ImageIcon("DixUL.png"));
+                                }
+                                element.setPreferredSize(new Dimension(110, 68));
+                                element.setBounds(nodes[leftOne].x, nodes[leftOne].y - 68, 110, 68);
+                                break;
                         }
 
                     } else {//means that Up branch has used
@@ -918,6 +983,71 @@ public class ECS_Gui {
                                 element = new JLabel(new ImageIcon("lxD.png"));
                                 element.setPreferredSize(new Dimension(110, 32));
                                 element.setBounds(nodes[leftOne].x, nodes[leftOne].y, 110, 32);
+                                break;
+
+                            case 'V':
+
+                                switch (AcDc) {
+
+                                    case 'D':
+                                        if (leftOne == negativeNode) {
+                                            element = new JLabel(new ImageIcon("vxDR.png"));
+                                        } else {
+                                            element = new JLabel(new ImageIcon("vxDL.png"));
+                                        }
+                                        element.setPreferredSize(new Dimension(110, 68));
+                                        element.setBounds(nodes[leftOne].x, nodes[leftOne].y, 110, 68);
+                                        break;
+
+                                    case 'A':
+                                        element = new JLabel(new ImageIcon("acxD.png"));
+                                        element.setPreferredSize(new Dimension(110, 65));
+                                        element.setBounds(nodes[leftOne].x, nodes[leftOne].y, 110, 65);
+                                        break;
+                                }
+                                break;
+
+                            case 'I':
+                                switch (AcDc) {
+
+                                    case 'D':
+                                        if (leftOne == negativeNode) {
+                                            element = new JLabel(new ImageIcon("ixDR.png"));
+                                        } else {
+                                            element = new JLabel(new ImageIcon("ixDL.png"));
+                                        }
+                                        element.setPreferredSize(new Dimension(110, 67));
+                                        element.setBounds(nodes[leftOne].x, nodes[leftOne].y, 110, 67);
+                                        break;
+
+                                    case 'A':
+                                        element = new JLabel(new ImageIcon("acxD.png"));
+                                        element.setPreferredSize(new Dimension(110, 65));
+                                        element.setBounds(nodes[leftOne].x, nodes[leftOne].y, 110, 65);
+                                        break;
+                                }
+                                break;
+
+                            case 'E':
+                            case 'H':
+                                if (leftOne == negativeNode) {
+                                    element = new JLabel(new ImageIcon("DvxDR.png"));
+                                } else {
+                                    element = new JLabel(new ImageIcon("DvxDL.png"));
+                                }
+                                element.setPreferredSize(new Dimension(110, 70));
+                                element.setBounds(nodes[leftOne].x, nodes[leftOne].y, 110, 70);
+                                break;
+
+                            case 'F':
+                            case 'G':
+                                if (leftOne == negativeNode) {
+                                    element = new JLabel(new ImageIcon("DixDR.png"));
+                                } else {
+                                    element = new JLabel(new ImageIcon("DixDL.png"));
+                                }
+                                element.setPreferredSize(new Dimension(110, 68));
+                                element.setBounds(nodes[leftOne].x, nodes[leftOne].y, 110, 68);
                                 break;
                         }
                     }
@@ -960,14 +1090,14 @@ public class ECS_Gui {
                                         } else {
                                             element = new JLabel(new ImageIcon("vyLD.png"));
                                         }
-                                        element.setPreferredSize(new Dimension(50, 110));
-                                        element.setBounds(nodes[upOne].x - 50, nodes[upOne].y, 50, 110);
+                                        element.setPreferredSize(new Dimension(68, 110));
+                                        element.setBounds(nodes[upOne].x - 68, nodes[upOne].y, 68, 110);
                                         break;
 
                                     case 'A':
                                         element = new JLabel(new ImageIcon("acyL.png"));
-                                        element.setPreferredSize(new Dimension(40, 110));
-                                        element.setBounds(nodes[upOne].x - 40, nodes[upOne].y, 40, 110);
+                                        element.setPreferredSize(new Dimension(65, 110));
+                                        element.setBounds(nodes[upOne].x - 65, nodes[upOne].y, 65, 110);
                                         break;
                                 }
                                 break;
@@ -981,14 +1111,14 @@ public class ECS_Gui {
                                         } else {
                                             element = new JLabel(new ImageIcon("iyLD.png"));
                                         }
-                                        element.setPreferredSize(new Dimension(50, 110));
-                                        element.setBounds(nodes[upOne].x - 50, nodes[upOne].y, 50, 110);
+                                        element.setPreferredSize(new Dimension(67, 110));
+                                        element.setBounds(nodes[upOne].x - 67, nodes[upOne].y, 67, 110);
                                         break;
 
                                     case 'A':
                                         element = new JLabel(new ImageIcon("acyL.png"));
-                                        element.setPreferredSize(new Dimension(40, 110));
-                                        element.setBounds(nodes[upOne].x - 40, nodes[upOne].y, 40, 110);
+                                        element.setPreferredSize(new Dimension(65, 110));
+                                        element.setBounds(nodes[upOne].x - 65, nodes[upOne].y, 65, 110);
                                         break;
                                 }
                                 break;
@@ -1000,8 +1130,8 @@ public class ECS_Gui {
                                 } else {
                                     element = new JLabel(new ImageIcon("DvDL.png"));
                                 }
-                                element.setPreferredSize(new Dimension(45, 110));
-                                element.setBounds(nodes[upOne].x - 45, nodes[upOne].y, 45, 110);
+                                element.setPreferredSize(new Dimension(70, 110));
+                                element.setBounds(nodes[upOne].x - 70, nodes[upOne].y, 70, 110);
                                 break;
 
                             case 'F':
@@ -1011,8 +1141,8 @@ public class ECS_Gui {
                                 } else {
                                     element = new JLabel(new ImageIcon("DiDL.png"));
                                 }
-                                element.setPreferredSize(new Dimension(50, 110));
-                                element.setBounds(nodes[upOne].x - 50, nodes[upOne].y, 50, 110);
+                                element.setPreferredSize(new Dimension(68, 110));
+                                element.setBounds(nodes[upOne].x - 68, nodes[upOne].y, 68, 110);
                                 break;
 
                         }
@@ -1050,14 +1180,14 @@ public class ECS_Gui {
                                         else {
                                             element = new JLabel(new ImageIcon("vyRD.png"));
                                         }
-                                        element.setPreferredSize(new Dimension(50, 110));
-                                        element.setBounds(nodes[upOne].x, nodes[upOne].y, 50, 110);
+                                        element.setPreferredSize(new Dimension(68, 110));
+                                        element.setBounds(nodes[upOne].x, nodes[upOne].y, 68, 110);
                                         break;
 
                                     case 'A':
                                         element = new JLabel(new ImageIcon("acyR.png"));
-                                        element.setPreferredSize(new Dimension(40, 110));
-                                        element.setBounds(nodes[upOne].x, nodes[upOne].y, 40, 110);
+                                        element.setPreferredSize(new Dimension(65, 110));
+                                        element.setBounds(nodes[upOne].x, nodes[upOne].y, 65, 110);
                                         break;
                                 }
                                 break;
@@ -1072,14 +1202,14 @@ public class ECS_Gui {
                                         else {
                                             element = new JLabel(new ImageIcon("iyRD.png"));
                                         }
-                                        element.setPreferredSize(new Dimension(50, 110));
-                                        element.setBounds(nodes[upOne].x, nodes[upOne].y, 50, 110);
+                                        element.setPreferredSize(new Dimension(67, 110));
+                                        element.setBounds(nodes[upOne].x, nodes[upOne].y, 67, 110);
                                         break;
 
                                     case 'A':
                                         element = new JLabel(new ImageIcon("acyR.png"));
-                                        element.setPreferredSize(new Dimension(40, 110));
-                                        element.setBounds(nodes[upOne].x, nodes[upOne].y, 40, 110);
+                                        element.setPreferredSize(new Dimension(65, 110));
+                                        element.setBounds(nodes[upOne].x, nodes[upOne].y, 65, 110);
                                         break;
                                 }
                                 break;
@@ -1091,8 +1221,8 @@ public class ECS_Gui {
                                 else {
                                     element = new JLabel(new ImageIcon("DvDR.png"));
                                 }
-                                element.setPreferredSize(new Dimension(45, 110));
-                                element.setBounds(nodes[upOne].x, nodes[upOne].y, 45, 110);
+                                element.setPreferredSize(new Dimension(70, 110));
+                                element.setBounds(nodes[upOne].x, nodes[upOne].y, 70, 110);
                                 break;
 
                             case 'F': case 'G':
@@ -1102,8 +1232,8 @@ public class ECS_Gui {
                                 else {
                                     element = new JLabel(new ImageIcon("DiDR.png"));
                                 }
-                                element.setPreferredSize(new Dimension(50, 110));
-                                element.setBounds(nodes[upOne].x, nodes[upOne].y, 50, 110);
+                                element.setPreferredSize(new Dimension(68, 110));
+                                element.setBounds(nodes[upOne].x, nodes[upOne].y, 68, 110);
                                 break;
                         }
                     }
