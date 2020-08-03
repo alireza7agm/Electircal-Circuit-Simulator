@@ -1,9 +1,9 @@
+import helloworld.HelloWorld;
 import org.knowm.xchart.QuickChart;
 import org.knowm.xchart.SwingWrapper;
 import org.knowm.xchart.XChartPanel;
 import org.knowm.xchart.XYChart;
 import org.knowm.xchart.style.colors.ColorBlindFriendlySeriesColors;
-
 import javax.swing.*;
 import javax.swing.border.LineBorder;
 import javax.xml.stream.events.Characters;
@@ -125,6 +125,7 @@ public class ECS_Gui {
         JTextArea input;
         JLabel inputName, fileName;
         File f;
+        double dt = 0.01;
 
         mainPage(File file){
 
@@ -189,6 +190,14 @@ public class ECS_Gui {
                 background.add(inputName);
 
                 input = new JTextArea(Files.readString(file.toPath()));
+                Scanner sc = new Scanner(Files.readString(file.toPath()));
+                while (sc.hasNextLine()){
+                    String line = sc.nextLine().trim();
+                    if (line.substring(0,2).equals("dt")){
+                        dt = Double.parseDouble(line.substring(line.indexOf('=') + 1).trim());
+                    }
+
+                }
                 input.setBounds(200,200,500,450);
                 input.setFont(f2);
                 input.setBackground(Color.YELLOW);
@@ -246,10 +255,13 @@ public class ECS_Gui {
                 //////////////draw
 
                 try {
+
                     this.dispose();
-                    DrawChart x = new DrawChart(f);
+                    DrawChart chart = new DrawChart(f, dt);
+
                 } catch (FileNotFoundException ex) {
-                    ex.printStackTrace();
+                    JOptionPane.showMessageDialog(this, "File Not Found", "No such file",
+                            JOptionPane.ERROR_MESSAGE);
                 }
 
 
@@ -369,9 +381,9 @@ public class ECS_Gui {
 
             for (int i = 0; i < lines.size(); i++) {
 
-                String[] words = lines.get(i).trim().split("\\s");
+                String[] words = lines.get(i).trim().split("\\s+");
 
-                if (words[0].charAt(0) == '*' || lines.get(i).trim().equals(".tran")) {
+                if (words[0].charAt(0) == '*' || words[0].charAt(0) == 'd' || words[0].equals(".tran")) {
                     //siktir
                 } else {
 
@@ -1231,26 +1243,33 @@ public class ECS_Gui {
 
     public static class DrawChart extends JFrame implements ActionListener{
 
-        File answers;
+        File answer, input;
         ArrayList<String> elements = new ArrayList<>();
         JComboBox whichElement;
         JRadioButton voltage, current, power;
         ButtonGroup group;
         JButton plot;
         JPanel chart = new JPanel();
+        double dt;
 
-        DrawChart(File input) throws FileNotFoundException {
+        public void setFiles(File answer){
+            this.answer = answer;
+        }
+
+        DrawChart(File input, double dt) throws FileNotFoundException {
 
             setSize(1400, 800);
             setDefaultCloseOperation(EXIT_ON_CLOSE);
             setLocationRelativeTo(null);
             setLayout(null);
 
+            this.dt = dt;
+            this.input = input;
             Scanner sc = new Scanner(input);
             while (sc.hasNextLine()){
                 String line = sc.nextLine().trim();
-                String[] words = line.split("\\s");
-                if (!(words[0].charAt(0) == '.' || words[0].charAt(0) == '*')){
+                String[] words = line.split("\\s+");
+                if (!(words[0].charAt(0) == '.' || words[0].charAt(0) == 'd' || words[0].charAt(0) == '*')){
                     elements.add(words[0]);
                 }
             }
@@ -1330,14 +1349,57 @@ public class ECS_Gui {
         public void actionPerformed(ActionEvent e){
             if (e.getSource() == plot){
                 this.setVisible(false);
-                double[] xData  = {0, 0.2, 0.4};
-                double[] yData = {0, 1, 4};
-                //some shit to be plotted
+
+                String fileName = String.format("%s.txt", this.whichElement.getSelectedItem().toString());
+                File answer = new File(fileName);
+                this.setFiles(answer);
+
+                ArrayList<Double> voltageList = new ArrayList<>();
+                ArrayList<Double> currentList = new ArrayList<>();
+                ArrayList<Double> powerList = new ArrayList<>();
+                ArrayList<Double> timeList = new ArrayList<>();
+                double[] voltageData = new double[0];
+                double[] currentData = new double[0];
+                double[] powerData = new double[0];
+                double[] time = new double[0];
+                double t = 0;
+
+                try {
+                    Scanner sc = new Scanner(answer);
+                    while(sc.hasNextLine()){
+                        String[] words = sc.nextLine().trim().split("\\s+");
+                        double v = Double.parseDouble(words[2]);
+                        double i = Double.parseDouble(words[5]);
+                        double p = Double.parseDouble(words[8]);
+                        t += dt;
+
+                        voltageList.add(v);
+                        currentList.add(i);
+                        powerList.add(p);
+                        timeList.add(t);
+                    }
+
+                    voltageData = new double[voltageList.size()];
+                    currentData = new double[currentList.size()];
+                    powerData = new double[powerList.size()];
+                    time = new double[timeList.size()];
+
+                    for (int i = 0; i < voltageList.size(); i++){
+                        voltageData[i] = voltageList.get(i);
+                        currentData[i] = currentList.get(i);
+                        powerData[i] = powerList.get(i);
+                        time[i] = timeList.get(i);
+                    }
+                }
+                catch (FileNotFoundException ex) {
+                    ex.printStackTrace();
+                }
+
                 chart.setVisible(false);
                 if (voltage.isSelected()){
 
                     XYChart chartV = QuickChart.getChart(whichElement.getSelectedItem().toString(), "Time",
-                            "Voltage", "V(t)", xData, yData);
+                            "Voltage", "V(t)", time, voltageData);
                     chart = new XChartPanel(chartV);
 
                 }
@@ -1345,7 +1407,7 @@ public class ECS_Gui {
                 else if (current.isSelected()){
 
                     XYChart chartI = QuickChart.getChart(whichElement.getSelectedItem().toString(), "Time",
-                            "Current", "I(t)", xData, yData);
+                            "Current", "I(t)", time, currentData);
                     chart = new XChartPanel(chartI);
 
                 }
@@ -1353,7 +1415,7 @@ public class ECS_Gui {
                 else if (power.isSelected()){
 
                     XYChart chartP = QuickChart.getChart(whichElement.getSelectedItem().toString(), "Time",
-                            "Power", "P(t)", xData, yData);
+                            "Power", "P(t)", time, powerData);
                     chart = new XChartPanel(chartP);
 
                 }
