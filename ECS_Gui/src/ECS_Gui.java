@@ -27,7 +27,6 @@ public class ECS_Gui {
     static Font f2 = new Font(Font.SERIF, Font.BOLD | Font.ITALIC, 20);
     static Font f4 = new Font(Font.SERIF, Font.BOLD | Font.ITALIC, 50);
 
-
     public static class startPage extends JFrame implements ActionListener {
 
         JButton openFile, instructionsButton, aboutButton;
@@ -193,8 +192,10 @@ public class ECS_Gui {
                 Scanner sc = new Scanner(Files.readString(file.toPath()));
                 while (sc.hasNextLine()){
                     String line = sc.nextLine().trim();
-                    if (line.substring(0,2).equals("dt")){
-                        dt = Double.parseDouble(line.substring(line.indexOf('=') + 1).trim());
+                    if (! line.equals("")) {
+                        if (line.substring(0, 2).equals("dt")) {
+                            dt = Double.parseDouble(line.substring(line.indexOf('=') + 1).trim());
+                        }
                     }
 
                 }
@@ -380,12 +381,15 @@ public class ECS_Gui {
             sc.close();
 
             for (int i = 0; i < lines.size(); i++) {
-
                 String[] words = lines.get(i).trim().split("\\s+");
 
-                if (words[0].charAt(0) == '*' || words[0].charAt(0) == 'd' || words[0].equals(".tran")) {
+                if (lines.get(i).equals("")){
                     //siktir
-                } else {
+                }
+                else if (words[0].charAt(0) == '*' || words[0].charAt(0) == 'd' || words[0].equals(".tran")) {
+                    //siktir
+                }
+                else {
 
                     //ac/dc sources
                     if (words.length == 7) {
