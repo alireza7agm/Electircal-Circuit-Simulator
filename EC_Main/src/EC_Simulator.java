@@ -16,6 +16,7 @@ public class HelloWorld {
 //////////////////////////////
     public static class Node{
 
+    	boolean connected_to_ground = false;
         double previous_voltage = 0;
         double voltage = 0;
         
@@ -501,6 +502,8 @@ public class HelloWorld {
 
         }
 
+        //adds the neighbor nodes of the given nodes to the added_nodes list needed for creating the supernodes. if two nodes are
+        //connected by voltage sources, sets their unions as equal
         void add_neighbor_nodes(int current_node_address)
         {
           for (Element e: this.elements)
@@ -578,7 +581,7 @@ public class HelloWorld {
           //////////
           for (int i =0; i<this.nodes.size(); i++)
           {
-            if (this.nodes.get(i).name.matches("GND"))
+            if (this.nodes.get(i).name.matches("0"))
             {
               ground_index = i;
             }
@@ -871,6 +874,258 @@ public class HelloWorld {
         	}
         }
 
+        public boolean Check_Ground()
+        {
+        	boolean ground_found = false;
+        	//check if a ground exists
+        	for ( Node n : this.nodes)
+        	{
+        		if (n.name.matches("0"))
+        		{
+        			ground_found = true;
+        		}
+        	}
+        	
+        	
+        	if (ground_found)
+        	{
+        		return true;
+        	}
+        	
+        	return false;
+        }
+        
+        public ArrayList<Integer> Return_Neighbor_Nodes_Addresses(String node_name)
+        {
+        	int node_address = -1;
+        	for (int i =0; i<this.nodes.size(); i++)
+        	{
+        		Node n = this.nodes.get(i);
+        		if (n.name.matches(node_name))
+        		{
+        			node_address = i;
+        		}
+        	}
+        	
+        	if (node_address == -1)
+        	{
+        		System.out.println("node not found");
+        	}
+        	
+        	
+        	//find neighbors of the last node in the cycle neighboring
+        	ArrayList<Integer> neighboring_nodes = new ArrayList<Integer>();
+        	for (Element e : this.elements)
+        	{
+        		//if the last node is the in node of the element e
+        		if (e.in_node_name.matches(this.nodes.get(node_address).name))
+        		{
+        			//add the out node to the neighboring nodes list
+        			for (int i =0; i<this.nodes.size(); i++)
+        			{
+        				Node n = this.nodes.get(i);
+        				if (n.name.matches(e.out_node_name))
+        				{
+        					boolean node_added = false;
+        					//if n is not already added
+        					for (Integer integer : neighboring_nodes)
+        					{
+        						if (integer == i)
+        						{
+        							node_added = true;
+        						}
+        					}
+        					
+        					if (!node_added)
+        					{
+        						neighboring_nodes.add(i);
+        					}
+        				}
+        			}
+        		}
+        		
+        		if (e.out_node_name.matches(this.nodes.get(node_address).name))
+        		{
+        			//add the out node to the neighboring nodes list
+        			for (int i =0; i<this.nodes.size(); i++)
+        			{
+        				Node n = this.nodes.get(i);
+        				if (n.name.matches(e.in_node_name))
+        				{
+        					boolean node_added = false;
+        					//if n is not already added
+        					for (Integer integer : neighboring_nodes)
+        					{
+        						if (integer == i)
+        						{
+        							node_added = true;
+        						}
+        					}
+        					
+        					if (!node_added)
+        					{
+        						neighboring_nodes.add(i);
+        					}
+        				}
+        			}
+        		}
+        		
+        	}
+        	
+        	return neighboring_nodes;
+        }
+        
+        public ArrayList<Integer> Return_Connected_Elements_Addresses(String node_name)
+        {
+
+        	ArrayList<Integer> connected_elements = new ArrayList<Integer>();
+        	for (int i=0; i<this.elements.size(); i++)
+        	{
+        		Element e = this.elements.get(i);
+        		if (e.in_node_name.matches(node_name) || e.out_node_name.matches(node_name))
+        		{
+        			connected_elements.add(i);
+        		}
+        	}
+        	return connected_elements;
+        }
+        
+        public boolean Check_Ground_Cycles(ArrayList<Integer> elements_addresses, ArrayList<Integer> nodes_addresses,
+        		boolean found_ground)
+        {
+        	
+        	String node_name = this.nodes.get(elements_addresses.get(elements_addresses.size()-1)).name;
+        	String starting_node_name = this.nodes.get(elements_addresses.get(0)).name;
+        	ArrayList<Integer> connected_elements = Return_Connected_Elements_Addresses(node_name);
+        	
+        	for (Integer i : connected_elements)
+        	{
+        		
+        		Element e = this.elements.get(i);
+        		
+        		//if element is not already in the cycle
+				boolean element_already_included = false;
+				for (Integer connected_element : connected_elements)
+				{
+					if (connected_element == i)
+					{
+						element_already_included = true;
+						break;
+					}
+				}
+				
+				//find name of the new node we're adding to the path
+        		String new_node;
+        		if (e.in_node_name.matches(node_name))
+        		{
+        			new_node = e.out_node_name;
+        		}
+        		
+        		else
+        		{
+        			new_node = e.in_node_name;
+        		}
+        	
+        		boolean node_already_included = false;
+        		//if new node is not already in the path
+        		for (Integer node_address: nodes_addresses)
+        		{
+        			if (this.nodes.get(node_address).name.matches(node_name))
+        			{
+        				node_already_included = true;
+        				break;
+        			}
+        		}
+	        	
+        		
+        		////if found a new node and element
+        		if (!node_already_included && !element_already_included)
+        		{
+        			if (new_node.matches("0"))
+	        		{
+	        			found_ground = true;
+	        		}
+	        		
+	        		ArrayList<Integer> neighboring_elements_of_new_node = Return_Connected_Elements_Addresses(new_node);
+	        		// if new node makes a cycle with the first node of the path and the ground is included, return true 
+	            	for (Integer element_address : neighboring_elements_of_new_node)
+	            	{
+	            		Element element = this.elements.get(element_address);
+	            		if (element.out_node_name.matches(starting_node_name) || element.in_node_name.matches(starting_node_name))
+	            		{
+	        				boolean new_element_already_included = false;
+	        				for (Integer connected_element : connected_elements)
+	        				{
+	        					if (connected_element == element_address)
+	        					{
+	        						new_element_already_included = true;
+	        						break;
+	        					}
+	        				}
+	            			
+	            			if (!new_element_already_included)
+	            			{
+	            				if (found_ground)
+	        					{
+	            					return true;
+	            				}
+	            			}		
+	            		}		
+	            	}
+	            	
+	            	//make a new path
+	            	ArrayList<Integer> path_nodes = new ArrayList<Integer>();
+	            	ArrayList<Integer> path_elements = new ArrayList<Integer>();
+	            	
+	            	//copy the existing path
+	            	for (Integer address : nodes_addresses)
+	            	{
+	            		path_nodes.add(address);
+	            	}
+	            	
+	            	for (Integer address : elements_addresses)
+	            	{
+	            		path_elements.add(address);
+	            	}
+	            	
+	            	//add the new element and node to the path
+	            	path_elements.add(i);
+	            	//find address of the node and add it to the path
+	            	boolean new_node_found = false;
+	            	for (int number =0; number<this.nodes.size(); i++)
+	            	{
+	            		if (this.nodes.get(number).name.matches(new_node))
+	            		{
+	            			new_node_found = true;
+	            			path_elements.add(number);
+	            			break;
+	            		}
+	            	}
+	            	
+	            	if (!new_node_found)
+	            	{
+	            		System.out.println("new node not found");
+	            	}
+	            	
+	            	//check the new path
+	            	boolean found_cycle = Check_Ground_Cycles(path_elements, path_nodes, found_ground);
+	            	if (found_cycle)
+	            	{
+	            		return true;
+	            	}
+        		}
+        			
+        	}
+        	
+        	return false;
+        }
+        
+        
+        
+        public boolean Check_Circuit()
+        {
+        	return true;
+        }
 
         double Calculate_Sum_of_Squares()
         {
@@ -893,16 +1148,16 @@ public class HelloWorld {
             for (SuperNode sn : this.super_nodes)
             {
               //ground voltage is constant
-                if (sn.name.matches("GND"))
+                if (sn.name.matches("0"))
                 {
                 	//if the element is connected on both heads to the ground supernode, update its current
                 	for (Element e: this.elements)
                 	{
                 		if (!e.type.matches("V"))
                 		{
-                			if (this.super_nodes.get(e.super_node_1).name.matches("GND"))
+                			if (this.super_nodes.get(e.super_node_1).name.matches("0"))
                     		{
-                    			if (this.super_nodes.get(e.super_node_2).name.matches("GND"))
+                    			if (this.super_nodes.get(e.super_node_2).name.matches("0"))
                     			{
                     				e.update(this.super_nodes.get(e.super_node_1), this.super_nodes.get(e.super_node_2));
                     			}
@@ -1160,12 +1415,12 @@ public class HelloWorld {
         try {
 
             Circuit eC = new Circuit();
-
+            
             Scanner sc = new Scanner(inputFile);
             ArrayList<String> lines = new ArrayList<>();
             int cnt = 0, checkEnoughVariables = 0;
             double dt = 0, dv = 0, di = 0;
-
+            double analysis_time = 5;
             while (sc.hasNextLine())
             {
                 lines.add(sc.nextLine().trim());
@@ -1297,9 +1552,14 @@ public class HelloWorld {
                 		}
                 	}
                 	
-                        if (checkEnoughVariables == 3){
+                	else if (lines.get(cnt).substring(0, 5).equals(".tran"))
+                	{
+                		analysis_time = Double.parseDouble(info[1]);
+                	}
+                	
+                    if (checkEnoughVariables == 3){
                             eC.circuit_initialize(dv, dt, di);
-                        }
+                    }
                         
                         /*if (1==2) {
                             //error for not initializing dv,dt,di
@@ -1307,6 +1567,7 @@ public class HelloWorld {
                         }
                         */
                   
+                        
                         
                         ///////////////////circuit analysis
                         
@@ -1319,7 +1580,7 @@ public class HelloWorld {
             sc.close();
             eC.Init_Circuit();
     
-            eC.Analyze(5);
+            eC.Analyze(analysis_time);
    
             eC.Show_Results();
         }
