@@ -1,3 +1,9 @@
+import org.knowm.xchart.QuickChart;
+import org.knowm.xchart.SwingWrapper;
+import org.knowm.xchart.XChartPanel;
+import org.knowm.xchart.XYChart;
+import org.knowm.xchart.style.colors.ColorBlindFriendlySeriesColors;
+
 import javax.swing.*;
 import javax.swing.border.LineBorder;
 import javax.xml.stream.events.Characters;
@@ -12,11 +18,6 @@ import java.util.Scanner;
 import java.util.regex.Matcher;
 
 public class ECS_Gui {
-
-    /////////////////////////////////
-    //ALL THE DIRECTORIES MUST CHANGE
-    /////////////////////////////////
-    //START PAGE MAY CHANGE
     /////////////////////////////////
     //INSTRUCTION & ABOUT US PAGES NEED TO BE WRITTEN
     /////////////////////////////////
@@ -134,7 +135,7 @@ public class ECS_Gui {
             setDefaultCloseOperation(EXIT_ON_CLOSE);
 
             //background
-            JLabel background = new JLabel(new ImageIcon("main6.jpg"));
+            JLabel background = new JLabel(new ImageIcon("bgOfMain.jpg"));
             background.setPreferredSize(new Dimension(1422, 800));
             add(background);
 
@@ -242,7 +243,15 @@ public class ECS_Gui {
 
             else if (e.getSource() == draw){
 
-                //////////////////
+                //////////////draw
+
+                try {
+                    this.dispose();
+                    DrawChart x = new DrawChart(f);
+                } catch (FileNotFoundException ex) {
+                    ex.printStackTrace();
+                }
+
 
             }
 
@@ -284,30 +293,6 @@ public class ECS_Gui {
 
     }
 
-    /*public static class parallelHandling{
-
-        boolean leftUsed = false;
-        boolean upUsed = false;
-        boolean straightBranch = false;
-
-        public boolean checkUsage(Point positiveNode, Point negativeNode){
-            if (positiveNode.alreadyConnected && negativeNode.alreadyConnected)
-                return true;
-            else
-                return false;
-        }
-
-        public void checkLeft(Point positiveNode, Point negativeNode){
-            leftUsed = true;
-        }
-
-        public boolean checkUp(Point positiveNode, Point negativeNode){
-            upUsed = true;
-        }
-
-
-    }*/
-
     public static class Branch{
         Point positiveNode;
         Point negativeNode;
@@ -330,7 +315,6 @@ public class ECS_Gui {
         }
 
     }
-
 
     public static class DrawCircuit extends JFrame {
 
@@ -1055,6 +1039,7 @@ public class ECS_Gui {
                     background.add(element);
                 }
 
+
                 //////////////////////////////////////Vertical mode
                 else if (Math.abs(positiveNode - negativeNode) == 6 || Math.min(positiveNode, negativeNode) == 0) {
                     int upOne = Math.max(positiveNode, negativeNode);
@@ -1243,6 +1228,145 @@ public class ECS_Gui {
             }
 
         }
+
+    public static class DrawChart extends JFrame implements ActionListener{
+
+        File answers;
+        ArrayList<String> elements = new ArrayList<>();
+        JComboBox whichElement;
+        JRadioButton voltage, current, power;
+        ButtonGroup group;
+        JButton plot;
+        JPanel chart = new JPanel();
+
+        DrawChart(File input) throws FileNotFoundException {
+
+            setSize(1400, 800);
+            setDefaultCloseOperation(EXIT_ON_CLOSE);
+            setLocationRelativeTo(null);
+            setLayout(null);
+
+            Scanner sc = new Scanner(input);
+            while (sc.hasNextLine()){
+                String line = sc.nextLine().trim();
+                String[] words = line.split("\\s");
+                if (!(words[0].charAt(0) == '.' || words[0].charAt(0) == '*')){
+                    elements.add(words[0]);
+                }
+            }
+            sc.close();
+
+            JLabel chooseElement = new JLabel("Choose Element");
+            chooseElement.setHorizontalAlignment(SwingConstants.CENTER);
+            chooseElement.setFont(f2);
+            chooseElement.setForeground(Color.BLACK);
+            chooseElement.setBackground(Color.RED);
+            chooseElement.setBorder(new LineBorder(Color.BLACK, 4, true));
+            chooseElement.setBounds(130, 50, 270, 50);
+            chooseElement.setOpaque(true);
+            this.add(chooseElement);
+
+            String[] availableElements = elements.toArray(new String[elements.size()]);
+            whichElement = new JComboBox(availableElements);
+            whichElement.setBounds(420, 50, 50, 50);
+            whichElement.setOpaque(true);
+            this.add(whichElement);
+
+
+            JLabel chooseMode = new JLabel("Choose Mode");
+            chooseMode.setHorizontalAlignment(SwingConstants.CENTER);
+            chooseMode.setFont(f2);
+            chooseMode.setForeground(Color.BLACK);
+            chooseMode.setBackground(Color.YELLOW);
+            chooseMode.setBorder(new LineBorder(Color.BLACK, 4, true));
+            chooseMode.setBounds(600, 50, 150, 50);
+            chooseMode.setOpaque(true);
+            this.add(chooseMode);
+
+            voltage = new JRadioButton("Voltage");
+            voltage.setFont(f2);
+            voltage.setBounds(770, 15, 120, 35);
+            voltage.setForeground(Color.BLACK);
+            //voltage.setBackground(Color.BLUE);
+            voltage.setBorder(new LineBorder(Color.BLACK, 3, true));
+            voltage.setSelected(true);
+            this.add(voltage);
+
+            current = new JRadioButton("Current");
+            current.setFont(f2);
+            current.setBounds(770, 60, 120, 35);
+            current.setForeground(Color.BLACK);
+            //current.setBackground(Color.BLUE);
+            current.setBorder(new LineBorder(Color.BLACK, 3, true));
+            this.add(current);
+
+            power = new JRadioButton("Power");
+            power.setFont(f2);
+            power.setBounds(770, 105, 120, 35);
+            power.setForeground(Color.BLACK);
+            //power.setBackground(Color.BLUE);
+            power.setBorder(new LineBorder(Color.BLACK, 3, true));
+            this.add(power);
+
+            group = new ButtonGroup();
+            group.add(voltage);
+            group.add(current);
+            group.add(power);
+            //this.add(group);
+
+            plot = new JButton(new ImageIcon("plot.png"));
+            plot.setBounds(1050, 15, 128, 128);
+            plot.setOpaque(false);
+            plot.setBorderPainted(false);
+            plot.setContentAreaFilled(false);
+            plot.addActionListener(this);
+            this.add(plot);
+
+
+            setVisible(true);
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e){
+            if (e.getSource() == plot){
+                this.setVisible(false);
+                double[] xData  = {0, 0.2, 0.4};
+                double[] yData = {0, 1, 4};
+                //some shit to be plotted
+                chart.setVisible(false);
+                if (voltage.isSelected()){
+
+                    XYChart chartV = QuickChart.getChart(whichElement.getSelectedItem().toString(), "Time",
+                            "Voltage", "V(t)", xData, yData);
+                    chart = new XChartPanel(chartV);
+
+                }
+
+                else if (current.isSelected()){
+
+                    XYChart chartI = QuickChart.getChart(whichElement.getSelectedItem().toString(), "Time",
+                            "Current", "I(t)", xData, yData);
+                    chart = new XChartPanel(chartI);
+
+                }
+
+                else if (power.isSelected()){
+
+                    XYChart chartP = QuickChart.getChart(whichElement.getSelectedItem().toString(), "Time",
+                            "Power", "P(t)", xData, yData);
+                    chart = new XChartPanel(chartP);
+
+                }
+
+                chart.setVisible(true);
+                chart.setBounds(150,200,1100,550);
+                add(chart);
+
+                setVisible(true);
+            }
+        }
+
+    }
 
     public static void main(String[] args){
 
