@@ -317,7 +317,7 @@ public class HelloWorld {
         {
           super(name, in, out, amplitude, "I");
         		  
-          dependency = 'e';
+          dependency = 'g';
           this.dependent_node_1 = dependent_node_1;
           this.dependent_node_2 = dependent_node_2;
         }
@@ -325,7 +325,7 @@ public class HelloWorld {
         public CurrentSource (String name, String in, String out, String dependent_element , double amplitude)
         {
         	super(name, in, out, amplitude, "I");
-          dependency = 'h';
+          dependency = 'f';
           this.dependent_element = dependent_element;
         }
 
@@ -365,6 +365,7 @@ public class HelloWorld {
         ArrayList <ArrayList<String>> super_node_lists = new ArrayList<ArrayList<String>>();
         ArrayList<Node> added_nodes = new ArrayList<Node>();
 
+        public static int circuit_check = 0;
         public static double time;
         double dv;
         public static double dt;
@@ -874,105 +875,20 @@ public class HelloWorld {
         	}
         }
 
-        public boolean Check_Ground()
+        public int Check_Ground()
         {
-        	boolean ground_found = false;
         	//check if a ground exists
-        	for ( Node n : this.nodes)
-        	{
-        		if (n.name.matches("0"))
-        		{
-        			ground_found = true;
-        		}
-        	}
-        	
-        	
-        	if (ground_found)
-        	{
-        		return true;
-        	}
-        	
-        	return false;
-        }
-        
-        public ArrayList<Integer> Return_Neighbor_Nodes_Addresses(String node_name)
-        {
-        	int node_address = -1;
-        	for (int i =0; i<this.nodes.size(); i++)
+        	for ( int i=0; i<this.nodes.size(); i++)
         	{
         		Node n = this.nodes.get(i);
-        		if (n.name.matches(node_name))
+        		if (n.name.matches("0"))
         		{
-        			node_address = i;
+        			return i;
         		}
         	}
         	
-        	if (node_address == -1)
-        	{
-        		System.out.println("node not found");
-        	}
         	
-        	
-        	//find neighbors of the last node in the cycle neighboring
-        	ArrayList<Integer> neighboring_nodes = new ArrayList<Integer>();
-        	for (Element e : this.elements)
-        	{
-        		//if the last node is the in node of the element e
-        		if (e.in_node_name.matches(this.nodes.get(node_address).name))
-        		{
-        			//add the out node to the neighboring nodes list
-        			for (int i =0; i<this.nodes.size(); i++)
-        			{
-        				Node n = this.nodes.get(i);
-        				if (n.name.matches(e.out_node_name))
-        				{
-        					boolean node_added = false;
-        					//if n is not already added
-        					for (Integer integer : neighboring_nodes)
-        					{
-        						if (integer == i)
-        						{
-        							node_added = true;
-        						}
-        					}
-        					
-        					if (!node_added)
-        					{
-        						neighboring_nodes.add(i);
-        					}
-        				}
-        			}
-        		}
-        		
-        		if (e.out_node_name.matches(this.nodes.get(node_address).name))
-        		{
-        			//add the out node to the neighboring nodes list
-        			for (int i =0; i<this.nodes.size(); i++)
-        			{
-        				Node n = this.nodes.get(i);
-        				if (n.name.matches(e.in_node_name))
-        				{
-        					boolean node_added = false;
-        					//if n is not already added
-        					for (Integer integer : neighboring_nodes)
-        					{
-        						if (integer == i)
-        						{
-        							node_added = true;
-        						}
-        					}
-        					
-        					if (!node_added)
-        					{
-        						neighboring_nodes.add(i);
-        					}
-        				}
-        			}
-        		}
-        		
-        	}
-        	
-        	return neighboring_nodes;
+        	return -1;
         }
         
         public ArrayList<Integer> Return_Connected_Elements_Addresses(String node_name)
@@ -989,8 +905,202 @@ public class HelloWorld {
         	}
         	return connected_elements;
         }
+ 
+        public int Find_Connected_Elements_Number(int address)
+        {
+        	int connected_elements_count = 0;
+        	String name = this.nodes.get(address).name;
+        	for (Element e :this.elements)
+        	{
+        		if (e.in_node_name.matches(name))
+        		{
+        			connected_elements_count++;
+        		}
+        		
+        		else if (e.out_node_name.matches(name))
+        		{
+        			connected_elements_count++;
+        		}
+        	}
+        	
+        	return connected_elements_count;
+        }
         
-        public boolean Check_Ground_Cycles(ArrayList<Integer> elements_addresses, ArrayList<Integer> nodes_addresses,
+        public boolean Check_KVL(ArrayList<Integer> elements_addresses, ArrayList<Integer> nodes_addresses)
+        {
+        	//if found a voltage source cycle
+        	boolean voltage_source_cycle = true;
+        	for (Integer i : elements_addresses)
+        	{
+        		if (!this.elements.get(i).type.matches("V"))
+        		{
+        			voltage_source_cycle = false;
+        		}
+        	}
+        	
+        	if (voltage_source_cycle)
+        	{
+        		//if there is an ac source in the cycle, return false
+        		for (Integer i : elements_addresses)
+        		{
+        			VoltageSource v = (VoltageSource) this.elements.get(i);
+        			if (v.frequency != 0) 
+        			{
+        				return false;
+        			}
+        		}
+        		
+        		
+        		double voltage = 0;
+        		for (int i =0; i<elements_addresses.size(); i++) 
+        		{
+        			int address = elements_addresses.get(i);
+        			Element e = this.elements.get(address);
+        			
+        			//if moving from in to out
+        			if (this.nodes.get(nodes_addresses.get(i)).name.matches(e.in_node_name))
+        			{
+
+        					VoltageSource v = (VoltageSource) e;
+        					if (v.dependency == 'i')
+        					{
+        						voltage += v.ReturnVoltage();
+        					}
+        					
+        					else if (v.dependency == 'e')
+        					{
+        						voltage += v.ReturnVoltage(this.nodes.get(v.dependent_node_1_address), this.nodes.get(v.dependent_node_2_address));
+        					}
+        					
+        					//if v.dependency == 'h'
+        					else
+        					{
+        						voltage += v.ReturnVoltage(this.elements.get(v.dependent_element_address));
+        					}       				
+
+        			}
+        			
+        			//if moving from out to in
+        			else if (this.nodes.get(nodes_addresses.get(i)).name.matches(e.out_node_name))
+        			{
+
+        					VoltageSource v = (VoltageSource) e;
+        					if (v.dependency == 'i')
+        					{
+        						voltage -= v.ReturnVoltage();
+        					}
+        					
+        					else if (v.dependency == 'e')
+        					{
+        						voltage -= v.ReturnVoltage(this.nodes.get(v.dependent_node_1_address), this.nodes.get(v.dependent_node_2_address));
+        					}
+        					
+        					//if v.dependency == 'h'
+        					else
+        					{
+        						voltage -= v.ReturnVoltage(this.elements.get(v.dependent_element_address));
+        					}
+        				}
+        			
+        		}
+        		
+        		//if kvl is true
+        		if (voltage == 0)
+        		{
+        			return true;
+        		}
+        		
+        		else
+        		{
+        			return false;
+        		}
+        	}
+        	
+        	else
+        	{
+        		double voltage = 0;
+        		for (int i =0; i<elements_addresses.size(); i++) 
+        		{
+        			int address = elements_addresses.get(i);
+        			Element e = this.elements.get(address);
+        			
+        			//if moving from in to out
+        			if (this.nodes.get(nodes_addresses.get(i)).name.matches(e.in_node_name))
+        			{
+        				if (e.type.matches("V"))
+        				{
+        					VoltageSource v = (VoltageSource) e;
+        					if (v.dependency == 'i')
+        					{
+        						voltage += v.ReturnVoltage();
+        					}
+        					
+        					else if (v.dependency == 'e')
+        					{
+        						voltage += v.ReturnVoltage(this.nodes.get(v.dependent_node_1_address), this.nodes.get(v.dependent_node_2_address));
+        					}
+        					
+        					//if v.dependency == 'h'
+        					else
+        					{
+        						voltage += v.ReturnVoltage(this.elements.get(v.dependent_element_address));
+        					}
+        				}
+        				
+        				else
+        				{
+        					voltage += this.nodes.get(nodes_addresses.get(i+1)).voltage 
+        							- this.added_nodes.get(nodes_addresses.get(i)).voltage;
+        				}
+        			}
+        			
+        			//if moving from out to in
+        			else if (this.nodes.get(nodes_addresses.get(i)).name.matches(e.out_node_name))
+        			{
+        				if (e.type.matches("V"))
+        				{
+        					VoltageSource v = (VoltageSource) e;
+        					if (v.dependency == 'i')
+        					{
+        						voltage -= v.ReturnVoltage();
+        					}
+        					
+        					else if (v.dependency == 'e')
+        					{
+        						voltage -= v.ReturnVoltage(this.nodes.get(v.dependent_node_1_address), this.nodes.get(v.dependent_node_2_address));
+        					}
+        					
+        					//if v.dependency == 'h'
+        					else
+        					{
+        						voltage -= v.ReturnVoltage(this.elements.get(v.dependent_element_address));
+        					}
+        				}
+        				
+        				else
+        				{
+        					voltage -= this.nodes.get(nodes_addresses.get(i+1)).voltage 
+        							- this.added_nodes.get(nodes_addresses.get(i)).voltage;
+        				}
+        			}
+        			
+        		}
+        		
+        		//if kvl is true
+        		if (voltage<0.1)
+        		{
+        			return true;
+        		}
+        		
+        		else
+        		{
+        			return false;
+        		}
+        		
+        	}
+        }
+        
+        public boolean Check_Cycles(ArrayList<Integer> elements_addresses, ArrayList<Integer> nodes_addresses,
         		boolean found_ground)
         {
         	
@@ -1000,14 +1110,14 @@ public class HelloWorld {
         	
         	for (Integer i : connected_elements)
         	{
-        		
+        			
         		Element e = this.elements.get(i);
-        		
+
         		//if element is not already in the cycle
 				boolean element_already_included = false;
-				for (Integer connected_element : connected_elements)
+				for (Integer element_address : elements_addresses)
 				{
-					if (connected_element == i)
+					if (element_address == i)
 					{
 						element_already_included = true;
 						break;
@@ -1041,6 +1151,9 @@ public class HelloWorld {
         		////if found a new node and element
         		if (!node_already_included && !element_already_included)
         		{
+        			//if the new node is always connected to the first node, 
+        			//it cannot be used to make a new path. only check the cycles of that is the case 
+        			boolean path_available = false;
         			if (new_node.matches("0"))
 	        		{
 	        			found_ground = true;
@@ -1050,7 +1163,9 @@ public class HelloWorld {
 	        		// if new node makes a cycle with the first node of the path and the ground is included, return true 
 	            	for (Integer element_address : neighboring_elements_of_new_node)
 	            	{
-	            		Element element = this.elements.get(element_address);
+	            		
+	            		
+	            		Element element = this.elements.get(element_address);	            		
 	            		if (element.out_node_name.matches(starting_node_name) || element.in_node_name.matches(starting_node_name))
 	            		{
 	        				boolean new_element_already_included = false;
@@ -1063,65 +1178,283 @@ public class HelloWorld {
 	        					}
 	        				}
 	            			
+	        				//if found a new cycle
 	            			if (!new_element_already_included)
 	            			{
-	            				if (found_ground)
+	            				//if found a cycle made of voltage sources, return false
+	            				boolean found_voltage_source_cycle = true;
+	            				//if the new element is a voltage source
+	            				if (element.type.matches("V"))
+	            				{
+	            					//if all the elements in the path are voltage sources
+	            					for (Integer integer : elements_addresses)
+	            					{
+	            						if (!this.elements.get(integer).type.matches("V"))
+	            						{
+	            							found_voltage_source_cycle = false;
+	            						}
+	            					}
+	            				}
+	            				else
+	            				{
+	            					found_voltage_source_cycle = false;
+	            				}
+	            				
+	            				if (found_voltage_source_cycle)
+	            				{
+	            					if (nodes_addresses.get(0) == this.Check_Ground())
+		            				{
+		            					//if found a voltage source cycle with the ground, return error -4
+		            					this.circuit_check = -4;
+		            					return false;
+		            				}
+	            					
+	            					else
+	            					{
+	            						///////////////////////check kvl for the voltage source cycle
+	            						//make a new path
+	            		            	ArrayList<Integer> path_nodes = new ArrayList<Integer>();
+	            		            	ArrayList<Integer> path_elements = new ArrayList<Integer>();
+	            		            	
+	            		            	//copy the existing path
+	            		            	for (Integer address : nodes_addresses)
+	            		            	{
+	            		            		path_nodes.add(address);
+	            		            	}
+	            		            	
+	            		            	for (Integer address : elements_addresses)
+	            		            	{
+	            		            		path_elements.add(address);
+	            		            	}
+	            		            	
+	            		            	//add the new element and node to the path
+	            		            	path_elements.add(i);
+	            		            	//find address of the node and add it to the path
+	            		            	boolean new_node_found = false;
+	            		            	for (int number =0; number<this.nodes.size(); i++)
+	            		            	{
+	            		            		if (this.nodes.get(number).name.matches(new_node))
+	            		            		{
+	            		            			new_node_found = true;
+	            		            			path_elements.add(number);
+	            		            			break;
+	            		            		}
+	            		            	}
+	            		            	
+	            		            	if (!new_node_found)
+	            		            	{
+	            		            		System.out.println("hi");
+	            		            	}
+	            		            	
+	            		            	boolean kvl = Check_KVL(path_elements, path_nodes);
+	            						//if found voltage source cycle 
+	            		            	if (!kvl)
+	            		            	{
+	            		            		this.circuit_check = -3;
+		            						return false;
+	            		            	}
+	            						
+	            					}
+	            				}
+	            				
+	            				
+	            				
+	            				else if (found_ground)
 	        					{
 	            					return true;
 	            				}
+	            				
+	            				
 	            			}		
-	            		}		
-	            	}
-	            	
-	            	//make a new path
-	            	ArrayList<Integer> path_nodes = new ArrayList<Integer>();
-	            	ArrayList<Integer> path_elements = new ArrayList<Integer>();
-	            	
-	            	//copy the existing path
-	            	for (Integer address : nodes_addresses)
-	            	{
-	            		path_nodes.add(address);
-	            	}
-	            	
-	            	for (Integer address : elements_addresses)
-	            	{
-	            		path_elements.add(address);
-	            	}
-	            	
-	            	//add the new element and node to the path
-	            	path_elements.add(i);
-	            	//find address of the node and add it to the path
-	            	boolean new_node_found = false;
-	            	for (int number =0; number<this.nodes.size(); i++)
-	            	{
-	            		if (this.nodes.get(number).name.matches(new_node))
+	            		}	
+	            		
+	            		else
 	            		{
-	            			new_node_found = true;
-	            			path_elements.add(number);
-	            			break;
+	            			path_available = true;
 	            		}
 	            	}
 	            	
-	            	if (!new_node_found)
-	            	{
-	            		System.out.println("new node not found");
-	            	}
 	            	
-	            	//check the new path
-	            	boolean found_cycle = Check_Ground_Cycles(path_elements, path_nodes, found_ground);
-	            	if (found_cycle)
+	            	if (path_available)
 	            	{
-	            		return true;
-	            	}
+	            		//make a new path
+		            	ArrayList<Integer> path_nodes = new ArrayList<Integer>();
+		            	ArrayList<Integer> path_elements = new ArrayList<Integer>();
+		            	
+		            	//current source counter used for finding series current source
+		            	int current_source_count = 0;
+		            	
+		            	//copy the existing path
+		            	for (Integer address : nodes_addresses)
+		            	{
+		            		path_nodes.add(address);
+		            	}
+		            	
+		            	for (Integer address : elements_addresses)
+		            	{
+		            		if (this.elements.get(address).type.matches("I"))
+		            		{
+		            			current_source_count++;
+		            		}
+		            		path_elements.add(address);
+		            	}
+		            	
+		            	if (this.elements.get(i).type.matches("I"))
+		            	{
+		            		current_source_count++;
+		            	}
+		            			            	
+		            	//add the new element and node to the path
+		            	path_elements.add(i);
+		            	//find address of the node and add it to the path
+		            	boolean new_node_found = false;
+		            	for (int number =0; number<this.nodes.size(); i++)
+		            	{
+		            		if (this.nodes.get(number).name.matches(new_node))
+		            		{
+		            			new_node_found = true;
+		            			path_elements.add(number);
+		            			break;
+		            		}
+		            	}
+		            	
+		            	if (!new_node_found)
+		            	{
+		            		System.out.println("new node not found");
+		            	}
+		            	
+
+		            	//check if there are series current sources
+		            	boolean series_path = true;
+		            	if (current_source_count>1)
+		            	{
+		            		//if there is a node connected to multiple branches, break
+		            		for (Integer address : nodes_addresses)
+		            		{
+		            			if (this.Find_Connected_Elements_Number(address)>2)
+		            			{
+		            				series_path = false;
+		            				break;
+		            			}
+		            		}
+		            	}
+		            	
+		            	//check if the current sources are equal
+		            	if (series_path)
+		            	{
+		            		boolean found_first_current_source = false;
+		            		double current = 0;
+		            		for (Integer address : elements_addresses)
+		            		{
+		            			if (this.elements.get(address).type.matches("I"))
+		            			{
+		            				CurrentSource c = (CurrentSource) this.elements.get(address);
+		            				if (!found_first_current_source)
+		            				{
+		            					//if found an ac current source, return false
+		            				
+		            					if (c.dependency == 'i')
+		            					{
+		            						if (c.frequency != 0)
+		            						{
+		            							this.circuit_check = -2;
+		            							break;
+		            						}
+		            						
+		            						else
+		            						{
+		            							current = c.return_current();
+		            						}
+		            					}
+		            					
+		            					else if (c.dependency == 'g')
+		            					{
+		            						current = c.return_current(this.nodes.get(c.dependent_node_1_address),
+		            								this.nodes.get(c.dependent_node_2_address));
+		            					}
+		            					
+		            					//if c.dependency == f
+		            					else
+		            					{
+		            						current = c.return_current(this.elements.get(c.dependent_element_address));
+		            					}
+		            				}
+		            				
+		            				else
+		            				{
+		            					if (c.dependency == 'i')
+		            					{
+		            						if (c.frequency != 0)
+		            						{
+		            							this.circuit_check = -2;
+		            							break;
+		            						}
+		            						
+		            						else
+		            						{
+		            							if (current != c.return_current())
+		            							{
+		            								this.circuit_check = -2;
+		            								break;
+		            							}
+		            						}
+		            					}
+		            					
+		            					else if (c.dependency == 'g')
+		            					{
+		            						if (current != c.return_current(this.nodes.get(c.dependent_node_1_address),
+		            								this.nodes.get(c.dependent_node_2_address)))
+		            						{
+		            							this.circuit_check = -2;
+		            							break;
+		            						}
+		            					}
+		            					
+		            					else
+		            					{
+		            						if (current != c.return_current(this.elements.get(c.dependent_element_address)))
+		            						{
+		            							this.circuit_check = -2;
+		            							break;
+		            						}
+		            					}
+		            				}
+		            			}
+		            			
+		            			
+		            		}
+		            	}
+		            	if (this.circuit_check == -2)
+		            	{
+		            		return false;
+		            	}
+		            	
+		            	//check the new path
+		            	boolean found_cycle = Check_Cycles(path_elements, path_nodes, found_ground);
+		            	
+		            	//if found a voltage source cycle
+		            	if (this.circuit_check == -4 || this.circuit_check == -3 )
+		            	{
+		            		
+		            		return false;
+		            	}
+		            	
+		            	if (found_cycle)
+		            	{
+		            		return true;
+		            	}
+	        		}
         		}
+	            	
         			
         	}
         	
+        	//if there is a floating node, return error -5
+        	this.circuit_check = -5;
         	return false;
         }
         
-        
-        
+                
         public boolean Check_Circuit()
         {
         	return true;
