@@ -1,6 +1,4 @@
-package helloworld;
 //hi
-
 
 /////// alireza && amir presents:)))))))))))))
 
@@ -10,10 +8,13 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Scanner;
-import java.lang.Math; 
+import java.lang.Math;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
-public class HelloWorld {
+public class EC_Simulator {
 //////////////////////////////
+
     public static class Node{
 
     	boolean connected_to_ground = false;
@@ -373,7 +374,71 @@ public class HelloWorld {
         double sumOfSquares = 0;
         double sumOfSquares_2 = 0;
         double sumOfSquares_3 = 0;
-        
+
+        public double valueFinder(String value){
+            String regex = "\\d+\\.?\\d*";
+
+            Pattern normal = Pattern.compile(regex + ".*");
+            Pattern milli = Pattern.compile(regex + "m.*");
+            Pattern micro = Pattern.compile(regex + "u.*");
+            Pattern nano = Pattern.compile(regex + "n.*");
+            Pattern pico = Pattern.compile(regex + "p.*");
+            Pattern kilo = Pattern.compile(regex + "k.*", Pattern.CASE_INSENSITIVE);
+            Pattern Meg = Pattern.compile(regex + "Meg.*");
+            Pattern Gig = Pattern.compile(regex + "Gig.*");
+
+            Matcher p, n, u, m, k, Mega, Giga, none;
+            double converted = 0;
+            p = pico.matcher(value);
+            n = nano.matcher(value);
+            u = micro.matcher(value);
+            m = milli.matcher(value);
+            none = normal.matcher(value);
+            k = kilo.matcher(value);
+            Mega = Meg.matcher(value);
+            Giga = Gig.matcher(value);
+
+            String temp;
+
+            if (p.find()){
+                temp = p.group().substring(0, p.group().indexOf("m"));
+                converted = Double.parseDouble(temp) * 1e-12;
+            }
+            else if (n.find()){
+                temp = n.group().substring(0, n.group().indexOf("n"));
+                converted = Double.parseDouble(temp) * 1e-9;
+            }
+            else if (u.find()){
+                temp = u.group().substring(0, u.group().indexOf("u"));
+                converted = Double.parseDouble(temp) * 1e-6;
+            }
+            else if (m.find()){
+                temp = m.group().substring(0, m.group().indexOf("m"));
+                converted = Double.parseDouble(temp) * 1e-3;
+            }
+            else if (none.find()){
+                temp = none.group().substring(0, none.group().length() - 1);
+                converted = Double.parseDouble(temp);
+            }
+            else if (k.find()){
+                temp = k.group().substring(0, k.group().indexOf("k") & 32);
+                converted = Double.parseDouble(temp) * 1e3;
+            }
+            else if (Mega.find()){
+                temp = Mega.group().substring(0, Mega.group().indexOf("M"));
+                converted = Double.parseDouble(temp) * 1e6;
+            }
+            else if (Giga.find()){
+                temp = Giga.group().substring(0, Giga.group().indexOf("G"));
+                converted = Double.parseDouble(temp) * 1e9;
+            }
+            else{
+                return -85;
+            }
+
+            return converted;
+        }
+
         public void circuit_initialize(double dv, double dt, double di)
         {
         	Circuit.dt = dt;
@@ -1757,57 +1822,98 @@ public class HelloWorld {
             while (sc.hasNextLine())
             {
                 lines.add(sc.nextLine().trim());
-                String info[] = lines.get(cnt).split("\\s");
+                String info[] = lines.get(cnt).split("\\s+");
 
-                if (!lines.get(cnt).substring(0, 5).equals(".tran") && lines.get(cnt).charAt(0) != 'd') {
+                if (lines.get(cnt).length() < 4){
+                    //
+                }
+                else if (!lines.get(cnt).substring(0, 5).equals(".tran") && lines.get(cnt).charAt(0) != 'd') {
                 	
                     Node in = new Node(info[1]);
                     eC.Add_Node(info[1]);
                     Node out = new Node(info[2]);
                     eC.Add_Node(info[2]);
-                    
+
                 	switch (lines.get(cnt).charAt(0)) {
 
                     case 'R':
-                        Resistor R = new Resistor(info[0], in.name, out.name, Double.parseDouble(info[3]));
-                        eC.Add_Element((Element) R);
-                        break;
+                        if (eC.valueFinder(info[4]) != -85){
+                            Resistor R = new Resistor(info[0], in.name, out.name, eC.valueFinder(info[3]));
+                            eC.Add_Element((Element) R);
+                            break;
+                        }
+                        else {
+                            System.out.println("Invalid Value");
+                            return;
+                        }
                     case 'C':
-                        Capacitor C = new Capacitor(info[0], in.name, out.name, Double.parseDouble(info[3]), 0);
-                        eC.Add_Element((Element) C);
-                        break;
+                        if (eC.valueFinder(info[4]) != -85) {
+                            Capacitor C = new Capacitor(info[0], in.name, out.name, eC.valueFinder(info[3]), 0);
+                            eC.Add_Element((Element) C);
+                            break;
+                        }
+                        else {
+                            System.out.println("Invalid Value");
+                            return;
+                        }
                     case 'L':
-                        Inductor L = new Inductor(info[0], in.name, out.name, Double.parseDouble(info[3]), 0);
-                        eC.Add_Element((Element) L);
-                        break;
+                        if (eC.valueFinder(info[4]) != -85) {
+                            Inductor L = new Inductor(info[0], in.name, out.name, eC.valueFinder(info[3]), 0);
+                            eC.Add_Element((Element) L);
+                            break;
+                        }
+                        else {
+                            System.out.println("Invalid Value");
+                            return;
+                        }
                     case 'V':
                     	//if its an independent voltage source
                     	if (info.length == 7)
                     	{
-                    		VoltageSource V = new VoltageSource(info[0], in.name, out.name, Double.parseDouble(info[3]),
-                    				Double.parseDouble(info[4]), Double.parseDouble(info[5]), Double.parseDouble(info[6]));
-                    		eC.Add_Element((Element) V);
+                    	    if (eC.valueFinder(info[3]) != -85 && eC.valueFinder(info[4]) != -85
+                                    && eC.valueFinder(info[5]) !=-85 && eC.valueFinder(info[6]) != -85) {
+                                VoltageSource V = new VoltageSource(info[0], in.name, out.name, eC.valueFinder(info[3]),
+                                        eC.valueFinder(info[4]), eC.valueFinder(info[5]), eC.valueFinder(info[6]));
+                                eC.Add_Element((Element) V);
+                            }
+                            else {
+                                System.out.println("Invalid Value");
+                                return;
+                            }
                     	}
                     	
                     	//if its a current dependent element
                     	else if (info.length == 5)
                     	{
-                    		 VoltageSource V = new VoltageSource(info[0], in.name, out.name,  info[3],
-                     				Double.parseDouble(info[4]));
-                    		 eC.Add_Element((Element) V);
+                    	    if (eC.valueFinder(info[4]) != 85) {
+                                VoltageSource V = new VoltageSource(info[0], in.name, out.name, info[3],
+                                        eC.valueFinder(info[4]));
+                                eC.Add_Element((Element) V);
+                            }
+                            else {
+                                System.out.println("Invalid Value");
+                                return;
+                            }
                     	}
                     	
                     	//if it's a voltage dependent voltage source
                     	else if (info.length == 6)
                     	{
-                    		VoltageSource V = new VoltageSource(info[0], in.name, out.name,  info[3],
-                     				Double.parseDouble(info[4]));
-                    		 eC.Add_Element((Element) V);
+                    	    if (eC.valueFinder(info[4]) != -85) {
+                                VoltageSource V = new VoltageSource(info[0], in.name, out.name, info[3],
+                                        eC.valueFinder(info[4]));
+                                eC.Add_Element((Element) V);
+                            }
+                            else {
+                                System.out.println("Invalid Value");
+                                return;
+                            }
                     	}
                        
                     	else
                     	{
                     		System.out.println("Incorrect Voltage Source Information Format");
+                    		return;
                     	}
                         
                         break;
@@ -1815,30 +1921,49 @@ public class HelloWorld {
                     	//if it's an independent current source
                     	if (info.length == 7)
                     	{
-                    		CurrentSource I = new CurrentSource(info[0], in.name, out.name, Double.parseDouble(info[3])
-	                        		, Double.parseDouble(info[4]), Double.parseDouble(info[5]), Double.parseDouble(info[6]));
-	                        eC.Add_Element((Element) I);
+                            if (eC.valueFinder(info[3]) != -85 && eC.valueFinder(info[4]) != -85
+                                    && eC.valueFinder(info[5]) !=-85 && eC.valueFinder(info[6]) != -85) {
+                                CurrentSource I = new CurrentSource(info[0], in.name, out.name, eC.valueFinder(info[3]),
+                                        eC.valueFinder(info[4]), eC.valueFinder(info[5]), eC.valueFinder(info[6]));
+                                eC.Add_Element((Element) I);
+                            }
+                            else {
+                                System.out.println("Invalid Value");
+                                return;
+                            }
                     	}
 	                        
                        	//if its a current dependent current source
-                    	else if (info.length == 5)
-                    	{
-                    		 CurrentSource I = new CurrentSource(info[0], in.name, out.name,  info[3],
-                     				Double.parseDouble(info[4]));
-                    		 eC.Add_Element((Element) I);
-                    	}
+                    	else if (info.length == 5) {
+                            if (eC.valueFinder(info[4]) != -85) {
+                                CurrentSource I = new CurrentSource(info[0], in.name, out.name, info[3],
+                                        eC.valueFinder(info[4]));
+                                eC.Add_Element((Element) I);
+                            }
+                            else {
+                                System.out.println("Invalid Value");
+                                return;
+                            }
+                        }
                     	
                     	//if it's a voltage dependent current source
                     	else if (info.length == 6)
                     	{
-                    		CurrentSource I = new CurrentSource(info[0], in.name, out.name,  info[3],
-                     				Double.parseDouble(info[4]));
-                    		 eC.Add_Element((Element) I);
+                    	    if (eC.valueFinder(info[4]) != -85) {
+                                CurrentSource I = new CurrentSource(info[0], in.name, out.name, info[3],
+                                        eC.valueFinder(info[4]));
+                                eC.Add_Element((Element) I);
+                            }
+                            else {
+                                System.out.println("Invalid Value");
+                                return;
+                            }
                     	}
                        
                     	else
                     	{
                     		System.out.println("Incorrect Current Source Information Format");
+                    		return;
                     	}
                         
                         break;
@@ -1849,16 +1974,10 @@ public class HelloWorld {
 
                     default:
                         System.out.printf("Invalid Syntax : line %d ", cnt);
-                        break;
-                	
+                        return;
+
                 	}
-                    //error invalid value
 
-
-                    //error invalid syntax
-
-
-                    //pico micro ...   
                 }
                 
                 else
@@ -1866,30 +1985,32 @@ public class HelloWorld {
                 	if (lines.get(cnt).charAt(0) == 'd')
                 	{
                 		switch (lines.get(cnt).charAt(1)){
-                        case 't':
-                            dt = Double.parseDouble(info[2]);
+                        case 't': case 'T':
+                            dt = eC.valueFinder(info[2]);
                             checkEnoughVariables++;
                             break;
-                        case 'v':
-                            dv = Double.parseDouble(info[2]);
+                        case 'v': case 'V':
+                            dv = eC.valueFinder(info[2]);
                             checkEnoughVariables++;
                             break;
-                        case 'i':
-                            di = Double.parseDouble(info[2]);
+                        case 'i': case 'I':
+                            di = eC.valueFinder(info[2]);
                             checkEnoughVariables++;
                             break;
 
                         default:
                             System.out.printf("Invalid Syntax : line %d ", cnt);
-                            break;
+                            return;
                 		}
                 	}
                 	
                 	else if (lines.get(cnt).substring(0, 5).equals(".tran"))
                 	{
-                		analysis_time = Double.parseDouble(info[1]);
+                		analysis_time = eC.valueFinder(info[1]);
                 	}
-                	
+
+
+
                     if (checkEnoughVariables == 3){
                             eC.circuit_initialize(dv, dt, di);
                     }
@@ -1898,10 +2019,8 @@ public class HelloWorld {
                             //error for not initializing dv,dt,di
                             System.out.printf("Not Enough Information!");
                         }
-                        */
-                  
-                        
-                        
+                         */
+
                         ///////////////////circuit analysis
                         
                     //loops and updates
@@ -1910,6 +2029,12 @@ public class HelloWorld {
 
                 cnt++;
             }
+
+            if (checkEnoughVariables != 3){
+                System.out.println("Not Enough Information");
+                return;
+            }
+
             sc.close();
             eC.Init_Circuit();
     
