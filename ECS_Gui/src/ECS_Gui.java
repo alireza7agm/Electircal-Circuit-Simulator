@@ -349,7 +349,7 @@ public class ECS_Gui {
             add(background);
 
             JLabel nameLabel = new JLabel();
-            String label = String.format("%s   Circut", input.getName());
+            String label = String.format("%s  Circut", input.getName().substring(0, input.getName().length() - 4));
             nameLabel.setHorizontalAlignment(SwingConstants.CENTER);
             nameLabel.setText(label);
             nameLabel.setBackground(Color.WHITE);
@@ -1354,7 +1354,7 @@ public class ECS_Gui {
             if (e.getSource() == plot){
                 this.setVisible(false);
 
-                String fileName = String.format("%s.txt", this.whichElement.getSelectedItem().toString());
+                String fileName = String.format("C:\\Users\\alire\\IdeaProjects\\Electircal-Circuit-Simulator\\EC_Main\\%s.txt", this.whichElement.getSelectedItem().toString());
                 File answer = new File(fileName);
                 this.setFiles(answer);
 
