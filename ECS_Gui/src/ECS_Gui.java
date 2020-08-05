@@ -19,9 +19,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class ECS_Gui {
-    /////////////////////////////////
-    //INSTRUCTION & ABOUT US PAGES NEED TO BE WRITTEN
-    /////////////////////////////////
 
     static Font f1 = new Font(Font.SERIF, Font.BOLD | Font.ITALIC, 30);
     static Font f3 = new Font(Font.SERIF, Font.BOLD | Font.ITALIC, 100);
@@ -294,7 +291,7 @@ public class ECS_Gui {
 
             if (e.getSource() == run){
 
-                this.dispose();
+                //this.dispose();
                 try {
                     DrawCircuit circuit = new DrawCircuit(f);
                 }
@@ -329,7 +326,7 @@ public class ECS_Gui {
 
                 try {
 
-                    this.dispose();
+                    //this.dispose();
                     DrawChart chart = new DrawChart(f, dt);
 
                 } catch (FileNotFoundException ex) {
@@ -411,7 +408,7 @@ public class ECS_Gui {
         DrawCircuit(File input) throws FileNotFoundException {
 
             setSize(1422, 800);
-            setDefaultCloseOperation(EXIT_ON_CLOSE);
+            setDefaultCloseOperation(DISPOSE_ON_CLOSE);
             setLocationRelativeTo(null);
 
             this.nodeSet();
@@ -1335,7 +1332,7 @@ public class ECS_Gui {
         DrawChart(File input, double dt) throws FileNotFoundException {
 
             setSize(1400, 800);
-            setDefaultCloseOperation(EXIT_ON_CLOSE);
+            setDefaultCloseOperation(DISPOSE_ON_CLOSE);
             setLocationRelativeTo(null);
             setLayout(null);
 
@@ -1426,9 +1423,8 @@ public class ECS_Gui {
             if (e.getSource() == plot){
                 this.setVisible(false);
 
-                String fileName = String.format("C:\\Users\\alire\\IdeaProjects\\Electircal-Circuit-Simulator\\EC_Main\\%s_%s.txt",
+                String fileName = String.format("C:\\Users\\alire\\IdeaProjects\\Electircal-Circuit-Simulator\\EC_Simulator\\%s_%s.txt",
                         this.input.getName().substring(0, this.input.getName().length() - 4), this.whichElement.getSelectedItem().toString());
-                System.out.println(fileName);
                 File answer = new File(fileName);
                 this.setFiles(answer);
 
