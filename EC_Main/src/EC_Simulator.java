@@ -2,6 +2,7 @@ package helloworld;
 //hi
 
 
+
 import java.io.BufferedWriter;
 
 /////// alireza && amir presents:)))))))))))))
@@ -18,6 +19,7 @@ import java.util.Scanner;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 
 import java.lang.Math; 
 
@@ -1394,6 +1396,7 @@ public class HelloWorld {
 	            		            	}
 	            						
 	            					}
+	            					
 	            				}
 	            				
 	            				
@@ -1602,12 +1605,114 @@ public class HelloWorld {
         {
         	if (Check_Ground()!=-1)
         	{
+        		for (Element e : this.elements)
+        		{
+        			if (e.type.matches("V"))
+        			{
+        				VoltageSource v = (VoltageSource) e;
+            			for (Element element : this.elements)
+            			{
+            				VoltageSource vs = (VoltageSource) element;
+            				if (vs.name.matches(v.name))
+            				{
+            					continue;
+            				}
+            				else
+            				{
+            					if (v.in_node_name.matches(vs.in_node_name))
+            					{
+            						if (v.out_node_name.matches(vs.out_node_name))
+            						{
+            							
+            							this.circuit_check = -4;
+            						}
+            					}
+            					
+            					if (v.out_node_name.matches(vs.in_node_name))
+            					{
+            						if (v.in_node_name.matches(vs.in_node_name))
+            						{
+            							this.circuit_check = -4;
+            						}
+            					}
+            				}
+            			}
+        			}
+        			
+        			else if (e.type.matches("I"))
+        			{
+        				CurrentSource c = (CurrentSource) e;
+        				for (Element element : this.elements)
+        				{
+        					CurrentSource cs = (CurrentSource) e;
+        					if (c.name.matches(cs.name))
+        					{
+        						continue;
+        					}
+        					
+        					else
+        					{
+        						if (c.in_node_name.matches(cs.out_node_name) || c.in_node_name.matches(cs.in_node_name))
+        						{
+        							int branch_counter = 0;
+        							for (Node n : this.nodes)
+        							{
+        								if (n.name.matches(c.in_node_name))
+        								{
+        									
+            								for (Element el : this.elements)
+            								{
+            									if (el.in_node_name.matches(n.name))
+            									{
+            										branch_counter++;
+            									}
+            								}
+        								}
+        								
+        							}
+        							
+        							if (branch_counter == 2)
+        							{
+        								this.circuit_check = -2;
+        							}
+        						}
+        						
+        						if (c.out_node_name.matches(cs.out_node_name) || c.out_node_name.matches(cs.in_node_name))
+        						{
+        							int branch_counter = 0;
+        							for (Node n : this.nodes)
+        							{
+        								if (n.name.matches(c.out_node_name))
+        								{
+        									
+            								for (Element el : this.elements)
+            								{
+            									if (el.in_node_name.matches(n.name))
+            									{
+            										branch_counter++;
+            									}
+            								}
+        								}
+        								
+        							}
+        							
+        							if (branch_counter == 2)
+        							{
+        								this.circuit_check = -2;
+        							}
+        						}
+        					}
+        				}
+        			}
+        			
+        		}
+        		/*
         		for (int i = 0 ; i < this.nodes.size(); i++)
         		{
         			ArrayList<Integer> elements_addresses = new ArrayList<Integer>();
             		ArrayList<Integer> nodes_addresses = new ArrayList<Integer>();
             		nodes_addresses.add(i);
-            		if (i == 0)
+            		if (this.nodes.get(i).name.matches("0"))
             		{
             			if (!Check_Cycles(elements_addresses, nodes_addresses, true))
             			{
@@ -1621,6 +1726,7 @@ public class HelloWorld {
             			return false;
             		}
         		}
+        		*/
         		
         	}
         	else
@@ -1911,7 +2017,7 @@ public class HelloWorld {
         		this.Update_Nodes();
         		for (Element e : this.elements)
         		{
-        			String name = String.format("%s.txt", e.name);
+        			String name = String.format("%s_%s.txt",this.filename, e.name);
         			FileWriter fw;
 					try {
 						fw = new FileWriter(name, true);
@@ -2215,11 +2321,21 @@ public class HelloWorld {
             }
 
             sc.close();
-            eC.Init_Circuit();
-    
-            eC.Analyze(analysis_time);
-   
-            eC.Show_Results();
+            boolean circuit_check = eC.Check_Circuit();
+            if (circuit_check && eC.circuit_check ==0)
+            {
+            	eC.Init_Circuit();
+                
+                eC.Analyze(analysis_time);
+       
+                eC.Show_Results();
+            }
+            
+            else
+            {
+            	System.out.println(eC.circuit_check);
+            }
+            
         }
 
         catch (FileNotFoundException e) {
