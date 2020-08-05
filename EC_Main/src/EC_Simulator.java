@@ -1,20 +1,27 @@
 //hi
 
+
+import java.io.BufferedWriter;
+
 /////// alireza && amir presents:)))))))))))))
 
 /////// inja har ruz begim be nazeret key tamoom mishe:))
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Scanner;
-import java.lang.Math;
+
+
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class EC_Simulator {
-//////////////////////////////
+import java.lang.Math; 
 
+public class HelloWorld {
+//////////////////////////////
     public static class Node{
 
     	boolean connected_to_ground = false;
@@ -147,13 +154,13 @@ public class EC_Simulator {
 
         void update(SuperNode in, SuperNode out)
         {
-          this.current = (in.ReturnVoltage(node_1, false) - out.ReturnVoltage(node_2, false))/this.value;
+          this.current = -1*(in.ReturnVoltage(node_1, false) - out.ReturnVoltage(node_2, false))/this.value;
         }
 
         double return_current(SuperNode in, SuperNode out)
         {
         	
-          return  (in.ReturnVoltage(node_1, false) - out.ReturnVoltage(node_2, false))/this.value;
+          return  -1*(in.ReturnVoltage(node_1, false) - out.ReturnVoltage(node_2, false))/this.value;
         }
 
     }
@@ -171,13 +178,16 @@ public class EC_Simulator {
 
         void update(SuperNode in, SuperNode out)
         {
-          this.current = this.value*((in.ReturnVoltage(node_1, false) - out.ReturnVoltage(node_2, false))
+        	
+          this.current = -1*this.value*((in.ReturnVoltage(node_1, false) - out.ReturnVoltage(node_2, false))
             -(in.ReturnVoltage(node_1, true) - out.ReturnVoltage(node_2, true)))/Circuit.dt;
+          
         }
 
         double return_current(SuperNode in, SuperNode out) 
         {
-          return this.value*((in.ReturnVoltage(node_1, false) - out.ReturnVoltage(node_2, false))
+
+          return -1*this.value*((in.ReturnVoltage(node_1, false) - out.ReturnVoltage(node_2, false))
             -(in.ReturnVoltage(node_1, true) - out.ReturnVoltage(node_2, true)))/Circuit.dt;
         }
 
@@ -196,12 +206,12 @@ public class EC_Simulator {
 
         void update(SuperNode in, SuperNode out)
         {
-          this.current += (in.ReturnVoltage(node_1, false) - out.ReturnVoltage(node_2, false))*Circuit.dt/this.value;
+          this.current += -1*(in.ReturnVoltage(node_1, false) - out.ReturnVoltage(node_2, false))*Circuit.dt/this.value;
         }
 
         double return_current(SuperNode in, SuperNode out)
         {
-          return (this.current + (in.ReturnVoltage(node_1, false) - out.ReturnVoltage(node_2, false))*Circuit.dt/this.value);
+          return -1*(this.current + (in.ReturnVoltage(node_1, false) - out.ReturnVoltage(node_2, false))*Circuit.dt/this.value);
         }
 
 
@@ -239,6 +249,7 @@ public class EC_Simulator {
           dependency = 'e';
           this.dependent_node_1 = dependent_node_1;
           this.dependent_node_2 = dependent_node_2;
+          this.amplitude = amplitude;
         }
 //current dependent voltage source
         public VoltageSource (String name, String in, String out, String dependent_element , double amplitude)
@@ -246,6 +257,7 @@ public class EC_Simulator {
         	super(name, in, out, amplitude, "V");
           dependency = 'h';
           this.dependent_element = dependent_element;
+          this.amplitude = amplitude;
         }
 
 ///////////returns voltage at time t
@@ -273,7 +285,6 @@ public class EC_Simulator {
 
         double ReturnVoltage()
         {
-
             return this.value + amplitude*Math.sin(Circuit.time*2*Math.PI*frequency + phase);
 
         }
@@ -287,6 +298,7 @@ public class EC_Simulator {
         
         double ReturnVoltage(Element e)
         {
+        	
         	return this.amplitude * e.current;
         }
 
@@ -321,6 +333,7 @@ public class EC_Simulator {
           dependency = 'g';
           this.dependent_node_1 = dependent_node_1;
           this.dependent_node_2 = dependent_node_2;
+          this.amplitude = amplitude;
         }
 //current dependent voltage source
         public CurrentSource (String name, String in, String out, String dependent_element , double amplitude)
@@ -328,6 +341,7 @@ public class EC_Simulator {
         	super(name, in, out, amplitude, "I");
           dependency = 'f';
           this.dependent_element = dependent_element;
+          this.amplitude = amplitude;
         }
 
 
@@ -366,14 +380,16 @@ public class EC_Simulator {
         ArrayList <ArrayList<String>> super_node_lists = new ArrayList<ArrayList<String>>();
         ArrayList<Node> added_nodes = new ArrayList<Node>();
 
+        public static String filename;
         public static int circuit_check = 0;
-        public static double time;
+        public static double time = 0;
         double dv;
         public static double dt;
         double di;
         double sumOfSquares = 0;
         double sumOfSquares_2 = 0;
         double sumOfSquares_3 = 0;
+        public static boolean ac_sources = false;
 
         public double valueFinder(String value){
             String regex = "\\d+\\.?\\d*";
@@ -417,13 +433,16 @@ public class EC_Simulator {
                 converted = Double.parseDouble(temp) * 1e-3;
             }
             else if (none.find()){
-                if (none.group().charAt(none.group().length() - 1) > 64){
+            	if (none.group().charAt(none.group().length()-1) > 64)
+            	{
                     temp = none.group().substring(0, none.group().length() - 1);
                     converted = Double.parseDouble(temp);
-                }
-                else{
-                    converted = Double.parseDouble(none.group());
-                }
+            	}
+            	
+            	else
+            	{
+            		converted = Double.parseDouble(none.group());
+            	}
             }
             else if (k.find()){
                 temp = k.group().substring(0, k.group().indexOf("k") & 32);
@@ -444,6 +463,7 @@ public class EC_Simulator {
             return converted;
         }
 
+        
         public void circuit_initialize(double dv, double dt, double di)
         {
         	Circuit.dt = dt;
@@ -454,6 +474,7 @@ public class EC_Simulator {
         //modifies voltage of the supernode sn by dv
         void ModifyVoltage(SuperNode sn, double dv)
         {
+        	
         	ArrayList <Node> modified = new ArrayList<Node> ();
             sn.nodes.get(0).double_previous_voltage = sn.nodes.get(0).previous_voltage;
             sn.nodes.get(0).previous_voltage = sn.nodes.get(0).voltage;
@@ -462,10 +483,12 @@ public class EC_Simulator {
             int counter = 0;
             while (modified.size()<sn.nodes.size() || counter<modified.size())
             {
+            	
               Node current_node = modified.get(counter);
               //find nodes connected to current_node
               for (VoltageSource v : sn.voltage_sources)
               {
+            	  
                 if (v.out_node_name.matches(current_node.name))
                 {
                   //if the connected node has not been updated
@@ -480,11 +503,13 @@ public class EC_Simulator {
 
                   if (!node_modified)
                   {
+                	  
                     //find node and modify voltage
                     for (Node n : sn.nodes)
                     {
                       if (n.name.matches(v.in_node_name))
                       {
+                    	  
                     	n.double_previous_voltage = n.previous_voltage;
                     	n.previous_voltage = n.voltage;
                         double voltage_difference = 0;
@@ -501,17 +526,21 @@ public class EC_Simulator {
                         	
                         else if (v.dependency == 'h')
                         {
-
+                        	
                         	voltage_difference = v.ReturnVoltage(this.elements.get(v.dependent_element_address));
-
-                        		
+                        	System.out.println(v.name+"  : " +this.elements.get(v.dependent_element_address).current+"   "+current_node.voltage);
+                        	
                        	}
+                        
+                        
                        	n.voltage = current_node.voltage - voltage_difference;
-                       }
+                       	
+                       	modified.add(n);
+                        break;
+                      }
                        
                    
-                        modified.add(n);
-                        break;
+                        
                       }
                     
                   }
@@ -553,15 +582,15 @@ public class EC_Simulator {
                             	
                             else if (v.dependency == 'h')
                             {
-
+                            	
                             	voltage_difference = v.ReturnVoltage(this.elements.get(v.dependent_element_address));
 
                             		
                            	}
                         	n.voltage = current_node.voltage + voltage_difference;
                         
-                        modified.add(n);
-                        break;
+                        	modified.add(n);
+                        	break;
                       }
                     }
                   }
@@ -642,10 +671,11 @@ public class EC_Simulator {
 
         }
         
-        
+        ///creates supernoodes
         public void Init_Circuit()
         {
           
+        
           int ground_index = 0;
           //find ground
           
@@ -667,6 +697,7 @@ public class EC_Simulator {
           }
 
 //create super nodes
+          
           ArrayList<String> current_super_nodes = new ArrayList<String>();
           for (Node n : this.added_nodes)
           {
@@ -733,15 +764,8 @@ public class EC_Simulator {
               //add the voltage source connecting this node to the super node, to the super node!
               
           }
-
-          for ( SuperNode sn : this.super_nodes)
-          {
-            //update voltages of nodes inside the supernodes just created
-            ModifyVoltage(sn, 0);
-
-          }
-
-
+          
+          
           int in_dependent_node = -1;
           int out_dependent_node = -1;
           int dependent_element = -1;
@@ -829,8 +853,11 @@ public class EC_Simulator {
           		  {
           			  if (v.dependent_element.matches(this.elements.get(i).name))
           			  {
+          				
           				  dependent_element = i;
           				  v.dependent_element_address = i;
+          			
+        				 
           				  break;
           			  }
           		  }
@@ -840,13 +867,22 @@ public class EC_Simulator {
           			  System.out.println("Could not find dependent element of the current source");
           		  }
           	  }
+          	  
+          	  //else check if there are ac sources in the circuit
+          	  else
+          	  {
+          		  if (v.frequency!=0)
+          		  {
+          			  this.ac_sources = true;
+          		  }
+          	  }
             }
           
             if (e.type.matches("I"))
             {
           	  CurrentSource s = (CurrentSource) e;
           	  
-          	  if (s.dependency == 'e')
+          	  if (s.dependency == 'g')
           	  {
           		  for (int i =0; i<this.nodes.size(); i++)
           		  {
@@ -883,7 +919,7 @@ public class EC_Simulator {
           	  }
 
           	  
-          	  else if (s.dependency == 'h')
+          	  else if (s.dependency == 'f')
           	  {
           		  for (int i =0; i<this.elements.size(); i++)
           		  {
@@ -900,10 +936,36 @@ public class EC_Simulator {
           			  System.out.println("Could not find dependent element of the current source");
           		  }
           	  }
+          	  
+          	  else
+          	  {
+          		  if (s.frequency != 0)
+          		  {
+          			  this.ac_sources = true;
+          		  }
+          	  }
+            
             }
           
           
           }
+          
+          
+          
+          for ( SuperNode sn : this.super_nodes)
+          {
+        	  
+            //update voltages of nodes inside the supernodes just created
+            ModifyVoltage(sn, 0);
+
+          }
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+      	//update the elements using the updated Voltages 
+          for (int i =0; i<this.elements.size(); i++)
+          {
+              this.elements.get(i).update(this.super_nodes.get(this.elements.get(i).super_node_1),
+              		this.super_nodes.get(this.elements.get(i).super_node_2));
+          } 
 
         }
 
@@ -1173,14 +1235,15 @@ public class EC_Simulator {
         public boolean Check_Cycles(ArrayList<Integer> elements_addresses, ArrayList<Integer> nodes_addresses,
         		boolean found_ground)
         {
-        	
-        	String node_name = this.nodes.get(elements_addresses.get(elements_addresses.size()-1)).name;
-        	String starting_node_name = this.nodes.get(elements_addresses.get(0)).name;
+
+        	String node_name = this.nodes.get(nodes_addresses.get(nodes_addresses.size()-1)).name;
+        	String starting_node_name = this.nodes.get(nodes_addresses.get(0)).name;
         	ArrayList<Integer> connected_elements = Return_Connected_Elements_Addresses(node_name);
         	
         	for (Integer i : connected_elements)
         	{
-        			
+
+
         		Element e = this.elements.get(i);
 
         		//if element is not already in the cycle
@@ -1194,6 +1257,8 @@ public class EC_Simulator {
 					}
 				}
 				
+
+				
 				//find name of the new node we're adding to the path
         		String new_node;
         		if (e.in_node_name.matches(node_name))
@@ -1206,12 +1271,14 @@ public class EC_Simulator {
         			new_node = e.in_node_name;
         		}
         	
+
         		boolean node_already_included = false;
         		//if new node is not already in the path
         		for (Integer node_address: nodes_addresses)
         		{
-        			if (this.nodes.get(node_address).name.matches(node_name))
+        			if (this.nodes.get(node_address).name.matches(new_node))
         			{
+        				
         				node_already_included = true;
         				break;
         			}
@@ -1221,6 +1288,7 @@ public class EC_Simulator {
         		////if found a new node and element
         		if (!node_already_included && !element_already_included)
         		{
+
         			//if the new node is always connected to the first node, 
         			//it cannot be used to make a new path. only check the cycles of that is the case 
         			boolean path_available = false;
@@ -1233,24 +1301,22 @@ public class EC_Simulator {
 	        		// if new node makes a cycle with the first node of the path and the ground is included, return true 
 	            	for (Integer element_address : neighboring_elements_of_new_node)
 	            	{
-	            		
-	            		
+
 	            		Element element = this.elements.get(element_address);	            		
+	            		
+	            		/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	            		if (element.out_node_name.matches(starting_node_name) || element.in_node_name.matches(starting_node_name))
 	            		{
 	        				boolean new_element_already_included = false;
-	        				for (Integer connected_element : connected_elements)
+	        				if (e.name.matches(element.name))
 	        				{
-	        					if (connected_element == element_address)
-	        					{
-	        						new_element_already_included = true;
-	        						break;
-	        					}
+	        					new_element_already_included = true;
 	        				}
 	            			
 	        				//if found a new cycle
 	            			if (!new_element_already_included)
 	            			{
+	            				
 	            				//if found a cycle made of voltage sources, return false
 	            				boolean found_voltage_source_cycle = true;
 	            				//if the new element is a voltage source
@@ -1265,6 +1331,7 @@ public class EC_Simulator {
 	            						}
 	            					}
 	            				}
+	            				
 	            				else
 	            				{
 	            					found_voltage_source_cycle = false;
@@ -1272,6 +1339,7 @@ public class EC_Simulator {
 	            				
 	            				if (found_voltage_source_cycle)
 	            				{
+		                    		
 	            					if (nodes_addresses.get(0) == this.Check_Ground())
 		            				{
 		            					//if found a voltage source cycle with the ground, return error -4
@@ -1331,6 +1399,7 @@ public class EC_Simulator {
 	            				
 	            				else if (found_ground)
 	        					{
+	            					
 	            					return true;
 	            				}
 	            				
@@ -1340,6 +1409,8 @@ public class EC_Simulator {
 	            		
 	            		else
 	            		{
+
+		            		
 	            			path_available = true;
 	            		}
 	            	}
@@ -1347,6 +1418,7 @@ public class EC_Simulator {
 	            	
 	            	if (path_available)
 	            	{
+	            		
 	            		//make a new path
 		            	ArrayList<Integer> path_nodes = new ArrayList<Integer>();
 		            	ArrayList<Integer> path_elements = new ArrayList<Integer>();
@@ -1527,7 +1599,39 @@ public class EC_Simulator {
                 
         public boolean Check_Circuit()
         {
-        	return true;
+        	if (Check_Ground()!=-1)
+        	{
+        		for (int i = 0 ; i < this.nodes.size(); i++)
+        		{
+        			ArrayList<Integer> elements_addresses = new ArrayList<Integer>();
+            		ArrayList<Integer> nodes_addresses = new ArrayList<Integer>();
+            		nodes_addresses.add(i);
+            		if (i == 0)
+            		{
+            			if (!Check_Cycles(elements_addresses, nodes_addresses, true))
+            			{
+            				return false;
+            			}
+            		}
+            		else if (!Check_Cycles(elements_addresses, nodes_addresses,false))
+            		{
+
+
+            			return false;
+            		}
+        		}
+        		
+        	}
+        	else
+        	{
+        		return false;
+        	}
+        	
+        	if (this.circuit_check!=0)
+        	{
+        		return false;
+        	}
+			return true;
         }
 
         double Calculate_Sum_of_Squares()
@@ -1642,7 +1746,9 @@ public class EC_Simulator {
                       
                       else
                       {
+
                     	  current_1 -= e.return_current(this.super_nodes.get(e.super_node_1), this.super_nodes.get(e.super_node_2));
+                    	  
                     	  ModifyVoltage(sn, dv);
                           current_2 -= e.return_current(this.super_nodes.get(e.super_node_1), this.super_nodes.get(e.super_node_2));
                           //undo voltage changes
@@ -1731,9 +1837,9 @@ public class EC_Simulator {
                 double sum_of_squares_1 = Calculate_Sum_of_Squares();
                 this.sumOfSquares = sum_of_squares_1;
                 //if error is small, don't do anything. error is checked here and not in the beginning because we want to find supernodes currents. this is important especially in the beginning of analysis
-                if (sum_of_squares_1 < 0.01)
+                if (sum_of_squares_1 < 0.00001)
                 {
-                
+                	
                     continue;
                 }
                 
@@ -1772,23 +1878,87 @@ public class EC_Simulator {
         
         void Analyze(double t)
         {
-        	int iterations = 1000;
+        	double iterations = t/Circuit.dt;
+        	iterations = Math.floor(iterations);
+        	ArrayList<File> results = new ArrayList<File>();
+        	
+        	for (Element e : this.elements)
+        	{
+        		try {
+        			String name = String.format("%s_%s.txt", this.filename,e.name);
+        			File result = new File(name);
+        			if (result.createNewFile())
+        			{
+        				results.add(result);
+        			}
+        		}
+        		
+        		catch (IOException error)
+        		{
+        			error.printStackTrace();
+        		}
+        	}
+        	
+        	
+        	
+
+            
         	for (int i =0; i<iterations; i++)
         	{
 
-        		this.Update_Nodes();
-        		time += dt;
 
+        		this.Update_Nodes();
+        		for (Element e : this.elements)
+        		{
+        			String name = String.format("%s.txt", e.name);
+        			FileWriter fw;
+					try {
+						fw = new FileWriter(name, true);
+						double current = e.current;
+						double voltage = this.super_nodes.get(e.super_node_2).ReturnVoltage(e.node_2, false) 
+								- this.super_nodes.get(e.super_node_1).ReturnVoltage(e.node_1, false);
+						double power = current * voltage * -1;
+						fw.write(String.format("v = %f  i = %f  p = %f%n",voltage , current,  power));
+						
+						fw.close();
+					} catch (IOException e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					}
+        		
+        		}	
+        		time += dt;
+        		
+        		
+        		//if there are ac source, update the voltages of the nodes
+        		if (ac_sources)
+        		{
+        			for (SuperNode sn : this.super_nodes)
+        			{
+        				ModifyVoltage(sn, 0);
+        			}
+        		}
+        		
+        		
         	}
             
         }
         
         void Show_Results()
         {
-        
+        	
+        	for (Element e : this.elements)
+        	{
+        		if (e.name.matches("V1"))
+        		{
+        			VoltageSource v = (VoltageSource) e;
+        			System.out.println("v1: " + v.ReturnVoltage());
+        		}
+        	}
         	//print node voltages
         	for (Node n : this.nodes)
         	{
+        		
         		System.out.println(n.name + "   " + n.union + "   " + n.voltage);
         	}
         	
@@ -1800,7 +1970,7 @@ public class EC_Simulator {
         	{
         		if (!e.type.matches("V"))
         		{
-        			System.out.println(e.type + "   "+ e.node_1 + "   " + e.node_2 + "   " + e.super_node_1 + "   "
+        			System.out.println(e.name + "   "+ e.node_1 + "   " + e.node_2 + "   " + e.super_node_1 + "   "
         					+ e.super_node_2 + "   " + e.current);
         		}
         	}
@@ -1813,12 +1983,14 @@ public class EC_Simulator {
 
     public static void main(String[] args){
 
-        File inputFile = new File("C:\\Users\\alire\\Desktop\\Test Cases\\RC_circuit.txt");
+    	String file = "input";
+    	String filename = String.format("%s.txt", file);
+        File inputFile = new File(filename);
 
         try {
 
             Circuit eC = new Circuit();
-            
+            eC.filename = file;
             Scanner sc = new Scanner(inputFile);
             ArrayList<String> lines = new ArrayList<>();
             int cnt = 0, checkEnoughVariables = 0;
@@ -1890,7 +2062,7 @@ public class EC_Simulator {
                     	//if its a current dependent element
                     	else if (info.length == 5)
                     	{
-                    	    if (eC.valueFinder(info[4]) != -85) {
+                    	    if (eC.valueFinder(info[4]) != 85) {
                                 VoltageSource V = new VoltageSource(info[0], in.name, out.name, info[3],
                                         eC.valueFinder(info[4]));
                                 eC.Add_Element((Element) V);
@@ -2037,6 +2209,7 @@ public class EC_Simulator {
 
             if (checkEnoughVariables != 3){
                 System.out.println("Not Enough Information");
+                sc.close();
                 return;
             }
 
