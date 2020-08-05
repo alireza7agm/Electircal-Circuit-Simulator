@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Scanner;
 import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class ECS_Gui {
     /////////////////////////////////
@@ -26,6 +27,76 @@ public class ECS_Gui {
     static Font f3 = new Font(Font.SERIF, Font.BOLD | Font.ITALIC, 100);
     static Font f2 = new Font(Font.SERIF, Font.BOLD | Font.ITALIC, 20);
     static Font f4 = new Font(Font.SERIF, Font.BOLD | Font.ITALIC, 50);
+
+    public static double valueFinder(String value){
+        String regex = "\\d+\\.?\\d*";
+
+        Pattern normal = Pattern.compile(regex + ".*");
+        Pattern milli = Pattern.compile(regex + "m.*");
+        Pattern micro = Pattern.compile(regex + "u.*");
+        Pattern nano = Pattern.compile(regex + "n.*");
+        Pattern pico = Pattern.compile(regex + "p.*");
+        Pattern kilo = Pattern.compile(regex + "k.*", Pattern.CASE_INSENSITIVE);
+        Pattern Meg = Pattern.compile(regex + "Meg.*");
+        Pattern Gig = Pattern.compile(regex + "Gig.*");
+
+        Matcher p, n, u, m, k, Mega, Giga, none;
+        double converted = 0;
+        p = pico.matcher(value);
+        n = nano.matcher(value);
+        u = micro.matcher(value);
+        m = milli.matcher(value);
+        none = normal.matcher(value);
+        k = kilo.matcher(value);
+        Mega = Meg.matcher(value);
+        Giga = Gig.matcher(value);
+
+        String temp;
+
+        if (p.find()){
+            temp = p.group().substring(0, p.group().indexOf("m"));
+            converted = Double.parseDouble(temp) * 1e-12;
+        }
+        else if (n.find()){
+            temp = n.group().substring(0, n.group().indexOf("n"));
+            converted = Double.parseDouble(temp) * 1e-9;
+        }
+        else if (u.find()){
+            temp = u.group().substring(0, u.group().indexOf("u"));
+            converted = Double.parseDouble(temp) * 1e-6;
+        }
+        else if (m.find()){
+            temp = m.group().substring(0, m.group().indexOf("m"));
+            converted = Double.parseDouble(temp) * 1e-3;
+        }
+        else if (none.find()){
+            if (none.group().charAt(none.group().length() - 1) > 64){
+                temp = none.group().substring(0, none.group().length() - 1);
+                converted = Double.parseDouble(temp);
+            }
+            else{
+                converted = Double.parseDouble(none.group());
+            }
+
+        }
+        else if (k.find()){
+            temp = k.group().substring(0, k.group().indexOf("k") & 32);
+            converted = Double.parseDouble(temp) * 1e3;
+        }
+        else if (Mega.find()){
+            temp = Mega.group().substring(0, Mega.group().indexOf("M"));
+            converted = Double.parseDouble(temp) * 1e6;
+        }
+        else if (Giga.find()){
+            temp = Giga.group().substring(0, Giga.group().indexOf("G"));
+            converted = Double.parseDouble(temp) * 1e9;
+        }
+        else{
+            return -85;
+        }
+
+        return converted;
+    }
 
     public static class startPage extends JFrame implements ActionListener {
 
@@ -194,7 +265,8 @@ public class ECS_Gui {
                     String line = sc.nextLine().trim();
                     if (! line.equals("")) {
                         if (line.substring(0, 2).equals("dt")) {
-                            dt = Double.parseDouble(line.substring(line.indexOf('=') + 1).trim());
+                            dt = valueFinder(line.substring(line.indexOf('=') + 1).trim());
+                            //dt = Double.parseDouble(line.substring(line.indexOf('=') + 1).trim());
                         }
                     }
 
@@ -349,7 +421,7 @@ public class ECS_Gui {
             add(background);
 
             JLabel nameLabel = new JLabel();
-            String label = String.format("%s  Circut", input.getName().substring(0, input.getName().length() - 4));
+            String label = String.format("%s  Circuit", input.getName().substring(0, input.getName().length() - 4));
             nameLabel.setHorizontalAlignment(SwingConstants.CENTER);
             nameLabel.setText(label);
             nameLabel.setBackground(Color.WHITE);
@@ -357,7 +429,7 @@ public class ECS_Gui {
             nameLabel.setOpaque(true);
             nameLabel.setFont(f4);
             nameLabel.setBorder(new LineBorder(Color.BLACK, 4));
-            nameLabel.setBounds(450, 10, 500, 70);
+            nameLabel.setBounds(350, 10, 600, 70);
             background.add(nameLabel);
 
             //sets the nodes in background
@@ -394,7 +466,7 @@ public class ECS_Gui {
                     //ac/dc sources
                     if (words.length == 7) {
 
-                        if (Integer.parseInt(words[5]) == 0) {
+                        if (valueFinder(words[5]) == 0) {
                             this.drawBranch(Integer.parseInt(words[1]), Integer.parseInt(words[2]),
                                     Character.toUpperCase(words[0].charAt(0)), 'D');
                         } else {
@@ -1354,7 +1426,9 @@ public class ECS_Gui {
             if (e.getSource() == plot){
                 this.setVisible(false);
 
-                String fileName = String.format("C:\\Users\\alire\\IdeaProjects\\Electircal-Circuit-Simulator\\EC_Main\\%s.txt", this.whichElement.getSelectedItem().toString());
+                String fileName = String.format("C:\\Users\\alire\\IdeaProjects\\Electircal-Circuit-Simulator\\EC_Main\\%s_%s.txt",
+                        this.input.getName().substring(0, this.input.getName().length() - 4), this.whichElement.getSelectedItem().toString());
+                System.out.println(fileName);
                 File answer = new File(fileName);
                 this.setFiles(answer);
 
@@ -1436,6 +1510,6 @@ public class ECS_Gui {
 
     public static void main(String[] args){
 
-        startPage intro = new startPage();
+       startPage intro = new startPage();
     }
 }

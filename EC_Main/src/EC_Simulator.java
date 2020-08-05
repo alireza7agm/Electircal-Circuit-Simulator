@@ -417,8 +417,13 @@ public class EC_Simulator {
                 converted = Double.parseDouble(temp) * 1e-3;
             }
             else if (none.find()){
-                temp = none.group().substring(0, none.group().length() - 1);
-                converted = Double.parseDouble(temp);
+                if (none.group().charAt(none.group().length() - 1) > 64){
+                    temp = none.group().substring(0, none.group().length() - 1);
+                    converted = Double.parseDouble(temp);
+                }
+                else{
+                    converted = Double.parseDouble(none.group());
+                }
             }
             else if (k.find()){
                 temp = k.group().substring(0, k.group().indexOf("k") & 32);
@@ -1808,7 +1813,7 @@ public class EC_Simulator {
 
     public static void main(String[] args){
 
-        File inputFile = new File("input.txt");
+        File inputFile = new File("C:\\Users\\alire\\Desktop\\Test Cases\\RC_circuit.txt");
 
         try {
 
@@ -1837,7 +1842,7 @@ public class EC_Simulator {
                 	switch (lines.get(cnt).charAt(0)) {
 
                     case 'R':
-                        if (eC.valueFinder(info[4]) != -85){
+                        if (eC.valueFinder(info[3]) != -85){
                             Resistor R = new Resistor(info[0], in.name, out.name, eC.valueFinder(info[3]));
                             eC.Add_Element((Element) R);
                             break;
@@ -1847,7 +1852,7 @@ public class EC_Simulator {
                             return;
                         }
                     case 'C':
-                        if (eC.valueFinder(info[4]) != -85) {
+                        if (eC.valueFinder(info[3]) != -85) {
                             Capacitor C = new Capacitor(info[0], in.name, out.name, eC.valueFinder(info[3]), 0);
                             eC.Add_Element((Element) C);
                             break;
@@ -1857,7 +1862,7 @@ public class EC_Simulator {
                             return;
                         }
                     case 'L':
-                        if (eC.valueFinder(info[4]) != -85) {
+                        if (eC.valueFinder(info[3]) != -85) {
                             Inductor L = new Inductor(info[0], in.name, out.name, eC.valueFinder(info[3]), 0);
                             eC.Add_Element((Element) L);
                             break;
@@ -1885,7 +1890,7 @@ public class EC_Simulator {
                     	//if its a current dependent element
                     	else if (info.length == 5)
                     	{
-                    	    if (eC.valueFinder(info[4]) != 85) {
+                    	    if (eC.valueFinder(info[4]) != -85) {
                                 VoltageSource V = new VoltageSource(info[0], in.name, out.name, info[3],
                                         eC.valueFinder(info[4]));
                                 eC.Add_Element((Element) V);
