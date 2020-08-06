@@ -1,3 +1,4 @@
+package helloworld;
 //hi
 
 
@@ -96,13 +97,9 @@ public class HelloWorld {
         {
         	for (Node n : this.nodes)
         	{
-        		n.voltage = n.previous_voltage;
-        		n.previous_voltage = n.double_previous_voltage;
-        		
+        		n.voltage = n.double_previous_voltage;
         	}
         }
-
-        
         
     }
 
@@ -359,17 +356,17 @@ public class HelloWorld {
         
         double return_current()
         {
-          return this.value + amplitude*Math.sin(Circuit.time*2*Math.PI*frequency + phase); 
+          return -1*(this.value + amplitude*Math.sin(Circuit.time*2*Math.PI*frequency + phase)); 
         }
         
         double return_current(Element e)
         {
-        	return this.amplitude * e.current;
+        	return -1*this.amplitude * e.current;
         }
 
         double return_current(Node dependent_node_1, Node dependent_node_2)
         {
-        	return this.amplitude*(dependent_node_1.voltage - dependent_node_2.voltage);
+        	return -1*this.amplitude*(dependent_node_1.voltage - dependent_node_2.voltage);
         }
         
     }
@@ -478,8 +475,7 @@ public class HelloWorld {
         {
         	
         	ArrayList <Node> modified = new ArrayList<Node> ();
-            sn.nodes.get(0).double_previous_voltage = sn.nodes.get(0).previous_voltage;
-            sn.nodes.get(0).previous_voltage = sn.nodes.get(0).voltage;
+            sn.nodes.get(0).double_previous_voltage = sn.nodes.get(0).voltage;
             sn.nodes.get(0).voltage += dv;
         	modified.add(sn.nodes.get(0));
             int counter = 0;
@@ -512,8 +508,7 @@ public class HelloWorld {
                       if (n.name.matches(v.in_node_name))
                       {
                     	  
-                    	n.double_previous_voltage = n.previous_voltage;
-                    	n.previous_voltage = n.voltage;
+                    	n.double_previous_voltage = n.voltage;
                         double voltage_difference = 0;
                         if (v.dependency == 'i')
                         {
@@ -530,8 +525,6 @@ public class HelloWorld {
                         {
                         	
                         	voltage_difference = v.ReturnVoltage(this.elements.get(v.dependent_element_address));
-                        	System.out.println(v.name+"  : " +this.elements.get(v.dependent_element_address).current+"   "+current_node.voltage);
-                        	
                        	}
                         
                         
@@ -568,8 +561,7 @@ public class HelloWorld {
                     {
                       if (n.name.matches(v.out_node_name))
                       {
-                    	n.double_previous_voltage = n.previous_voltage;
-                        n.previous_voltage = n.voltage;
+                    	n.double_previous_voltage = n.voltage;
                 
                         	double voltage_difference = 0;
                         	if (v.dependency == 'i')
@@ -1611,30 +1603,34 @@ public class HelloWorld {
         				VoltageSource v = (VoltageSource) e;
             			for (Element element : this.elements)
             			{
-            				VoltageSource vs = (VoltageSource) element;
-            				if (vs.name.matches(v.name))
+            				if (element.type.matches("V"))
             				{
-            					continue;
+                				VoltageSource vs = (VoltageSource) element;
+                				if (vs.name.matches(v.name))
+                				{
+                					continue;
+                				}
+                				else
+                				{
+                					if (v.in_node_name.matches(vs.in_node_name))
+                					{
+                						if (v.out_node_name.matches(vs.out_node_name))
+                						{
+                							
+                							this.circuit_check = -4;
+                						}
+                					}
+                					
+                					if (v.out_node_name.matches(vs.in_node_name))
+                					{
+                						if (v.in_node_name.matches(vs.in_node_name))
+                						{
+                							this.circuit_check = -4;
+                						}
+                					}
+                				}
             				}
-            				else
-            				{
-            					if (v.in_node_name.matches(vs.in_node_name))
-            					{
-            						if (v.out_node_name.matches(vs.out_node_name))
-            						{
-            							
-            							this.circuit_check = -4;
-            						}
-            					}
-            					
-            					if (v.out_node_name.matches(vs.in_node_name))
-            					{
-            						if (v.in_node_name.matches(vs.in_node_name))
-            						{
-            							this.circuit_check = -4;
-            						}
-            					}
-            				}
+
             			}
         			}
         			
@@ -1643,64 +1639,69 @@ public class HelloWorld {
         				CurrentSource c = (CurrentSource) e;
         				for (Element element : this.elements)
         				{
-        					CurrentSource cs = (CurrentSource) e;
-        					if (c.name.matches(cs.name))
-        					{
-        						continue;
+        					if (element.type.matches("I"))
+        					{	
+        						CurrentSource cs = (CurrentSource) e;
+            					if (c.name.matches(cs.name))
+            					{
+            						continue;
+            					}
+            					
+            					else
+            					{
+            						if (c.in_node_name.matches(cs.out_node_name) || c.in_node_name.matches(cs.in_node_name))
+            						{
+            							int branch_counter = 0;
+            							for (Node n : this.nodes)
+            							{
+            								if (n.name.matches(c.in_node_name))
+            								{
+            									
+                								for (Element el : this.elements)
+                								{
+                									
+                									if (el.in_node_name.matches(n.name))
+                									{
+                										branch_counter++;
+                									}
+                								}
+            								}
+            								
+            							}
+            							
+            							if (branch_counter == 2)
+            							{
+            								this.circuit_check = -2;
+            							}
+            						}
+            						
+            						if (c.out_node_name.matches(cs.out_node_name) || c.out_node_name.matches(cs.in_node_name))
+            						{
+            							int branch_counter = 0;
+            							for (Node n : this.nodes)
+            							{
+            								if (n.name.matches(c.out_node_name))
+            								{
+            									
+                								for (Element el : this.elements)
+                								{
+                									if (el.in_node_name.matches(n.name))
+                									{
+                										branch_counter++;
+                									}
+                								}
+            								}
+            								
+            							}
+            							
+            							if (branch_counter == 2)
+            							{
+            								this.circuit_check = -2;
+            							}
+            						}
+            					}
         					}
         					
-        					else
-        					{
-        						if (c.in_node_name.matches(cs.out_node_name) || c.in_node_name.matches(cs.in_node_name))
-        						{
-        							int branch_counter = 0;
-        							for (Node n : this.nodes)
-        							{
-        								if (n.name.matches(c.in_node_name))
-        								{
-        									
-            								for (Element el : this.elements)
-            								{
-            									if (el.in_node_name.matches(n.name))
-            									{
-            										branch_counter++;
-            									}
-            								}
-        								}
-        								
-        							}
-        							
-        							if (branch_counter == 2)
-        							{
-        								this.circuit_check = -2;
-        							}
-        						}
-        						
-        						if (c.out_node_name.matches(cs.out_node_name) || c.out_node_name.matches(cs.in_node_name))
-        						{
-        							int branch_counter = 0;
-        							for (Node n : this.nodes)
-        							{
-        								if (n.name.matches(c.out_node_name))
-        								{
-        									
-            								for (Element el : this.elements)
-            								{
-            									if (el.in_node_name.matches(n.name))
-            									{
-            										branch_counter++;
-            									}
-            								}
-        								}
-        								
-        							}
-        							
-        							if (branch_counter == 2)
-        							{
-        								this.circuit_check = -2;
-        							}
-        						}
-        					}
         				}
         			}
         			
@@ -1943,7 +1944,7 @@ public class HelloWorld {
                 double sum_of_squares_1 = Calculate_Sum_of_Squares();
                 this.sumOfSquares = sum_of_squares_1;
                 //if error is small, don't do anything. error is checked here and not in the beginning because we want to find supernodes currents. this is important especially in the beginning of analysis
-                if (sum_of_squares_1 < 0.00001)
+                if (sum_of_squares_1 < 0.0000000001)
                 {
                 	
                     continue;
@@ -1959,25 +1960,22 @@ public class HelloWorld {
                 
                 if (sum_of_squares_1 < sum_of_squares_2 && sum_of_squares_1 < sum_of_squares_3)
                 {
+                	this.sumOfSquares = sum_of_squares_1;
                 	continue;
                 }
                 
                 else if (sum_of_squares_2 < sum_of_squares_1 && sum_of_squares_2 < sum_of_squares_3)
                 {
+                	this.sumOfSquares = sum_of_squares_2;
                 	ModifyVoltage(sn, dv*sum_of_squares_1);
                 }
                 
                 else if (sum_of_squares_3 < sum_of_squares_1 && sum_of_squares_3 < sum_of_squares_2)
                 {
+                	this.sumOfSquares = sum_of_squares_3;
                 	ModifyVoltage(sn, -1*dv*sum_of_squares_1);
                 }
 
-                //update the elements using the updated Voltages 
-                for (Integer i : element_names)
-                {
-                    this.elements.get(i).update(this.super_nodes.get(this.elements.get(i).super_node_1),
-                    		this.super_nodes.get(this.elements.get(i).super_node_2));
-                }
             }
 
         }
@@ -2011,11 +2009,19 @@ public class HelloWorld {
             
         	for (int i =0; i<iterations; i++)
         	{
-
-
-        		this.Update_Nodes();
+        		Update_Nodes();
+        		int counter = 0;
+        		while (this.sumOfSquares > 0.000001 && counter < 2000)
+        		{
+        			this.Update_Nodes();
+        			counter++;
+        		}
+        		
         		for (Element e : this.elements)
         		{
+        			//update the elements
+        			e.update(this.super_nodes.get(e.super_node_1), this.super_nodes.get(e.super_node_2));        			
+        			//write stuff into files
         			String name = String.format("%s_%s.txt",this.filename, e.name);
         			FileWriter fw;
 					try {
@@ -2024,7 +2030,7 @@ public class HelloWorld {
 						double voltage = this.super_nodes.get(e.super_node_2).ReturnVoltage(e.node_2, false) 
 								- this.super_nodes.get(e.super_node_1).ReturnVoltage(e.node_1, false);
 						double power = current * voltage * -1;
-						fw.write(String.format("v = %f  i = %f  p = %f%n",voltage , current,  power));
+						fw.write(String.format("v = %s  i = %s  p = %s%n",voltage , current,  power));
 						
 						fw.close();
 					} catch (IOException e1) {
@@ -2033,8 +2039,13 @@ public class HelloWorld {
 					}
         		
         		}	
-        		time += dt;
         		
+        		time += dt;
+        		//change the voltages
+        		for (Node n : this.nodes)
+        		{
+        			n.previous_voltage = n.voltage;
+        		}
         		
         		//if there are ac source, update the voltages of the nodes
         		if (ac_sources)
@@ -2112,9 +2123,9 @@ public class HelloWorld {
                 }
                 else if (!lines.get(cnt).substring(0, 5).equals(".tran") && lines.get(cnt).charAt(0) != 'd') {
                 	
-                    Node in = new Node(info[1]);
+                    Node in = new Node(info[2]);
                     eC.Add_Node(info[1]);
-                    Node out = new Node(info[2]);
+                    Node out = new Node(info[1]);
                     eC.Add_Node(info[2]);
 
                 	switch (lines.get(cnt).charAt(0)) {
