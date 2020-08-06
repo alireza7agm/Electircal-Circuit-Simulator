@@ -1,4 +1,4 @@
-
+package helloworld;
 //hi
 
 
@@ -1965,7 +1965,7 @@ public class HelloWorld {
                 double sum_of_squares_1 = Calculate_Sum_of_Squares();
                 this.sumOfSquares = sum_of_squares_1;
                 //if error is small, don't do anything. error is checked here and not in the beginning because we want to find supernodes currents. this is important especially in the beginning of analysis
-                if (this.Check_KCL())
+                if (this.sumOfSquares < 0.00001)
                 {
                     continue;
                 }
